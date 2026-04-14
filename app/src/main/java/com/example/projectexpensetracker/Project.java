@@ -1,29 +1,82 @@
 package com.example.projectexpensetracker;
 
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+import androidx.room.Ignore;
+
+@Entity(
+    tableName = "projects",
+    foreignKeys = @ForeignKey(
+        entity = User.class,
+        parentColumns = "id",
+        childColumns = "user_id",
+        onDelete = ForeignKey.CASCADE
+    ),
+    indices = {
+        @Index(value = "project_code", unique = true),
+        @Index(value = "user_id")
+    }
+)
 public class Project {
 
+    @PrimaryKey(autoGenerate = true)
     private int id;
+
+    @ColumnInfo(name = "project_code")
     private String projectCode;
+
+    @ColumnInfo(name = "project_name")
     private String projectName;
+
+    @ColumnInfo(name = "description")
     private String description;
+
+    @ColumnInfo(name = "start_date")
     private String startDate;
+
+    @ColumnInfo(name = "end_date")
     private String endDate;
+
+    @ColumnInfo(name = "manager")
     private String manager;
+
+    @ColumnInfo(name = "status")
     private String status;           // "Active" | "Completed" | "On Hold"
+
+    @ColumnInfo(name = "budget")
     private double budget;
+
+    @ColumnInfo(name = "special_requirements")
     private String specialRequirements; // optional
+
+    @ColumnInfo(name = "client_info")
     private String clientInfo;          // optional
+
+    @ColumnInfo(name = "photo_url")
     private String photoUrl;            // optional
+
+    @ColumnInfo(name = "user_id")
     private int userId;
+
+    @ColumnInfo(name = "is_synced", defaultValue = "0")
     private int isSynced;            // 0 = not synced, 1 = synced
+
+    @ColumnInfo(name = "created_at", defaultValue = "CURRENT_TIMESTAMP")
     private String createdAt;
+
+    @ColumnInfo(name = "updated_at")
     private String updatedAt;
 
     // ─── Constructors ────────────────────────────────────────────────────────────
 
+    @Ignore
     public Project() {}
 
     /** Constructor dùng khi tạo project mới (chưa có id, createdAt, updatedAt) */
+    @Ignore
     public Project(String projectCode, String projectName, String description,
                    String startDate, String endDate, String manager,
                    String status, double budget,
@@ -44,7 +97,7 @@ public class Project {
         this.isSynced             = 0;
     }
 
-    /** Constructor đầy đủ — dùng khi đọc từ database */
+    /** Constructor đầy đủ — dùng khi đọc từ database (Room sủ dụng cái này) */
     public Project(int id, String projectCode, String projectName, String description,
                    String startDate, String endDate, String manager,
                    String status, double budget,
