@@ -1,31 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- PRIMARY -->
-    <color name="primary">#3F51B5</color>
-    <color name="primary_dark">#303F9F</color>
-    <color name="primary_light">#C5CAE9</color>
+    <!-- PRIMARY — Indigo 500 modern -->
+    <color name="primary">#6366F1</color>
+    <color name="primary_dark">#4F46E5</color>
+    <color name="primary_light">#E0E7FF</color>
+    <color name="primary_container">#EEF2FF</color>
 
-    <!-- SECONDARY -->
-    <color name="secondary">#475569</color>
-    <color name="secondary_light">#94A3B8</color>
+    <!-- SECONDARY — Slate -->
+    <color name="secondary">#64748B</color>
+    <color name="secondary_light">#CBD5E1</color>
 
-    <!-- TERTIARY -->
+    <!-- TERTIARY — Amber -->
     <color name="tertiary">#F59E0B</color>
-    <color name="tertiary_dark">#B45309</color>
+    <color name="tertiary_dark">#D97706</color>
 
-    <!-- NEUTRAL -->
-    <color name="background">#F8FAFC</color>
+    <!-- NEUTRAL / SURFACE -->
+    <color name="background">#F1F5F9</color>
     <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F8FAFC</color>
     <color name="border">#E2E8F0</color>
+    <color name="outline">#CBD5E1</color>
 
     <!-- TEXT -->
-    <color name="text_primary">#1E293B</color>
+    <color name="text_primary">#0F172A</color>
     <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
 
     <!-- STATUS -->
+    <color name="status_active_bg">#DCFCE7</color>
+    <color name="status_active_text">#166534</color>
+    <color name="status_completed_bg">#DBEAFE</color>
+    <color name="status_completed_text">#1E40AF</color>
+    <color name="status_hold_bg">#FEF9C3</color>
+    <color name="status_hold_text">#854D0E</color>
+
+    <!-- SEMANTIC -->
     <color name="success">#22C55E</color>
     <color name="error">#EF4444</color>
     <color name="warning">#F59E0B</color>
+    <color name="spent_color">#EF4444</color>
 
 </resources>

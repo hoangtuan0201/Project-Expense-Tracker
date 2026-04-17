@@ -5,23 +5,51 @@
         <!-- Primary -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/surface</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/primary_dark</item>
 
         <!-- Secondary -->
         <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/surface</item>
+
+        <!-- Tertiary -->
+        <item name="colorTertiary">@color/tertiary</item>
 
         <!-- Background -->
         <item name="android:colorBackground">@color/background</item>
 
         <!-- Surface -->
         <item name="colorSurface">@color/surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+
+        <!-- Outline -->
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/border</item>
 
         <!-- Text -->
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
 
-        <!-- Status -->
+        <!-- Error -->
         <item name="colorError">@color/error</item>
 
+        <!-- Shape — slightly rounded, not too aggressive -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
+
+    </style>
+
+    <!-- Shape tokens -->
+    <style name="ShapeSmall" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ShapeMedium" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeLarge" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerSize">16dp</item>
     </style>
 
 </resources>
