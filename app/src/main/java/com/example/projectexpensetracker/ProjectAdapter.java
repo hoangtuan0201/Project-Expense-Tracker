@@ -1,10 +1,12 @@
 package com.example.projectexpensetracker;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -78,6 +80,7 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
         private final TextView tvManager;
         private final TextView tvDateRange;
         private final TextView tvBudget;
+        private final ImageView ivSyncIcon;
         private final TextView tvSyncStatus;
 
         public ProjectViewHolder(@NonNull View itemView) {
@@ -88,6 +91,7 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             tvManager     = itemView.findViewById(R.id.tvManager);
             tvDateRange   = itemView.findViewById(R.id.tvDateRange);
             tvBudget      = itemView.findViewById(R.id.tvBudget);
+            ivSyncIcon    = itemView.findViewById(R.id.ivSyncIcon);
             tvSyncStatus  = itemView.findViewById(R.id.tvSyncStatus);
         }
 
@@ -105,13 +109,17 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             tvStatus.setText(project.getStatus());
             applyStatusBadgeColor(project.getStatus());
 
-            // Sync indicator
+            // Sync indicator — icon tint + label
             if (project.isSyncedToCloud()) {
-                tvSyncStatus.setText("⬤ Synced");
-                tvSyncStatus.setTextColor(Color.parseColor("#4CAF50")); // xanh lá
+                ivSyncIcon.setImageResource(R.drawable.ic_cloud_done);
+                ivSyncIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+                tvSyncStatus.setText("Synced");
+                tvSyncStatus.setTextColor(Color.parseColor("#4CAF50"));
             } else {
-                tvSyncStatus.setText("⬤ Local");
-                tvSyncStatus.setTextColor(Color.parseColor("#9E9E9E")); // xám
+                ivSyncIcon.setImageResource(R.drawable.ic_sync);
+                ivSyncIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
+                tvSyncStatus.setText("Local");
+                tvSyncStatus.setTextColor(Color.parseColor("#9E9E9E"));
             }
 
             // Click listener — toàn bộ card
