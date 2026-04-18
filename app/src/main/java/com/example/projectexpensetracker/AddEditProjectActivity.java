@@ -150,9 +150,42 @@ public class AddEditProjectActivity extends AppCompatActivity {
     private void setupSaveButton() {
         btnSaveProject.setOnClickListener(v -> {
             if (validateForm()) {
-                saveProject();
+                showConfirmationDialog();
             }
         });
+    }
+
+    /**
+     * Req (a): Hiển thị lại toàn bộ thông tin đã nhập để user xác nhận trước khi lưu.
+     * User có thể bấm "Edit" để quay lại sửa, hoặc "Confirm" để lưu.
+     */
+    private void showConfirmationDialog() {
+        String code    = getFieldText(etProjectCode);
+        String name    = getFieldText(etProjectName);
+        String start   = getFieldText(etStartDate);
+        String end     = getFieldText(etEndDate);
+        String manager = getFieldText(etManager);
+        String status  = spinnerStatus.getText().toString().trim();
+        String budget  = getFieldText(etBudget);
+        String specReq = getFieldText(etSpecialRequirements);
+        String client  = getFieldText(etClientInfo);
+
+        StringBuilder message = new StringBuilder();
+        message.append("Code: ").append(code).append("\n");
+        message.append("Name: ").append(name).append("\n");
+        message.append("Manager: ").append(manager).append("\n");
+        message.append("Status: ").append(status).append("\n");
+        message.append("Budget: $").append(budget).append("\n");
+        message.append("Period: ").append(start).append(" → ").append(end);
+        if (!specReq.isEmpty()) message.append("\nSpecial: ").append(specReq);
+        if (!client.isEmpty())  message.append("\nClient: ").append(client);
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle(isEditMode ? "Confirm Update" : "Confirm New Project")
+                .setMessage(message.toString())
+                .setPositiveButton("Confirm & Save", (d, w) -> saveProject())
+                .setNegativeButton("Edit Information", null)
+                .show();
     }
 
     /**

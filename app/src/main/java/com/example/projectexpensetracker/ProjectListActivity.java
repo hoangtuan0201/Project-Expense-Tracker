@@ -181,10 +181,11 @@ public class ProjectListActivity extends AppCompatActivity {
     }
 
     private void setupAdvancedSearch() {
-        String[] statusOptions = {"", "Active", "Completed", "On Hold"};
+        String[] statusOptions = {"All Status", "Active", "Completed", "On Hold"};
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this, android.R.layout.simple_dropdown_item_1line, statusOptions);
         spinnerStatusFilter.setAdapter(statusAdapter);
+        spinnerStatusFilter.setText(statusOptions[0], false); // default selection
 
         btnToggleAdvancedSearch.setOnClickListener(v -> {
             if (layoutAdvancedSearch.getVisibility() == View.GONE) {
@@ -200,7 +201,9 @@ public class ProjectListActivity extends AppCompatActivity {
         etToDate.setOnClickListener(v -> showDatePicker(etToDate));
 
         btnApplyFilters.setOnClickListener(v -> {
-            String status  = spinnerStatusFilter.getText().toString().trim();
+            String rawStatus = spinnerStatusFilter.getText().toString().trim();
+            // "All Status" means no filter
+            String status  = (rawStatus.equals("All Status") || rawStatus.isEmpty()) ? "" : rawStatus;
             String manager = etManagerFilter.getText() != null
                     ? etManagerFilter.getText().toString().trim() : "";
             String from    = etFromDate.getText() != null
@@ -219,7 +222,7 @@ public class ProjectListActivity extends AppCompatActivity {
         });
 
         btnResetFilters.setOnClickListener(v -> {
-            spinnerStatusFilter.setText("", false);
+            spinnerStatusFilter.setText(statusOptions[0], false); // reset to "All Status"
             etManagerFilter.setText("");
             etFromDate.setText("");
             etToDate.setText("");

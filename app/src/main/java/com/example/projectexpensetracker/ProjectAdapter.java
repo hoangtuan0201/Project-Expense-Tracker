@@ -1,10 +1,12 @@
 package com.example.projectexpensetracker;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -78,7 +80,9 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
         private final TextView tvManager;
         private final TextView tvDateRange;
         private final TextView tvBudget;
+        private final ImageView ivSyncIcon;
         private final TextView tvSyncStatus;
+        private final View viewAccentBar;
 
         public ProjectViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -88,7 +92,9 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             tvManager     = itemView.findViewById(R.id.tvManager);
             tvDateRange   = itemView.findViewById(R.id.tvDateRange);
             tvBudget      = itemView.findViewById(R.id.tvBudget);
+            ivSyncIcon    = itemView.findViewById(R.id.ivSyncIcon);
             tvSyncStatus  = itemView.findViewById(R.id.tvSyncStatus);
+            viewAccentBar = itemView.findViewById(R.id.viewAccentBar);
         }
 
         void bind(Project project) {
@@ -105,49 +111,57 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             tvStatus.setText(project.getStatus());
             applyStatusBadgeColor(project.getStatus());
 
-            // Sync indicator
+            // Sync indicator — icon tint + label
             if (project.isSyncedToCloud()) {
-                tvSyncStatus.setText("⬤ Synced");
-                tvSyncStatus.setTextColor(Color.parseColor("#4CAF50")); // xanh lá
+                ivSyncIcon.setImageResource(R.drawable.ic_cloud_done);
+                ivSyncIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50")));
+                tvSyncStatus.setText("Synced");
+                tvSyncStatus.setTextColor(Color.parseColor("#4CAF50"));
             } else {
-                tvSyncStatus.setText("⬤ Local");
-                tvSyncStatus.setTextColor(Color.parseColor("#9E9E9E")); // xám
+                ivSyncIcon.setImageResource(R.drawable.ic_sync);
+                ivSyncIcon.setImageTintList(ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
+                tvSyncStatus.setText("Local");
+                tvSyncStatus.setTextColor(Color.parseColor("#9E9E9E"));
             }
 
             // Click listener — toàn bộ card
             itemView.setOnClickListener(v -> listener.onProjectClick(project));
         }
 
-        /** Đổi màu nền + chữ của status badge theo trạng thái. */
+        /** Đổi màu status badge + accent bar bên trái theo trạng thái. */
         private void applyStatusBadgeColor(String status) {
-            int bgColor;
-            int textColor;
+            int bgColor, textColor, accentColor;
 
             switch (status) {
                 case "Active":
-                    bgColor   = Color.parseColor("#E8F5E9"); // xanh lá nhạt
-                    textColor = Color.parseColor("#2E7D32"); // xanh lá đậm
+                    bgColor     = Color.parseColor("#DCFCE7");
+                    textColor   = Color.parseColor("#166534");
+                    accentColor = Color.parseColor("#22C55E");
                     break;
                 case "Completed":
-                    bgColor   = Color.parseColor("#E3F2FD"); // xanh dương nhạt
-                    textColor = Color.parseColor("#1565C0"); // xanh dương đậm
+                    bgColor     = Color.parseColor("#DBEAFE");
+                    textColor   = Color.parseColor("#1E40AF");
+                    accentColor = Color.parseColor("#6366F1");
                     break;
                 case "On Hold":
                 default:
-                    bgColor   = Color.parseColor("#FFF8E1"); // vàng nhạt
-                    textColor = Color.parseColor("#F57F17"); // cam đậm
+                    bgColor     = Color.parseColor("#FEF9C3");
+                    textColor   = Color.parseColor("#854D0E");
+                    accentColor = Color.parseColor("#F59E0B");
                     break;
             }
 
-            // Tạo background shape động (rounded rectangle)
+            // Status pill badge
             android.graphics.drawable.GradientDrawable shape =
                     new android.graphics.drawable.GradientDrawable();
             shape.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
             shape.setCornerRadius(40f);
             shape.setColor(bgColor);
-
             tvStatus.setBackground(shape);
             tvStatus.setTextColor(textColor);
+
+            // Left accent bar
+            viewAccentBar.setBackgroundColor(accentColor);
         }
     }
 }
