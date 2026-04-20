@@ -20,6 +20,22 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import java.util.List;
+import java.io.IOException;
+
 /**
  * AddEditExpenseActivity — Req (c)
  * Dùng cho add mới và edit expense.
@@ -30,7 +46,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
 
     // ─── Views ───────────────────────────────────────────────────────────────────
     private TextInputLayout   layoutCode, layoutAmount, layoutType;
-    private TextInputLayout   layoutDate, layoutPaymentMethod, layoutClaimant, layoutStatus;
+    private TextInputLayout   layoutDate, layoutPaymentMethod, layoutClaimant, layoutStatus, layoutLocation;
     private TextInputEditText etCode, etAmount, etDate, etClaimant, etDescription, etLocation;
     private AutoCompleteTextView spinnerCurrency, spinnerType, spinnerPaymentMethod, spinnerStatus;
     private MaterialButton    btnSave;
@@ -40,6 +56,8 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     private Expense  existingExpense;
     private int      projectId;
     private boolean  isEditMode = false;
+    
+    private ActivityResultLauncher<String[]> locationPermissionRequest;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +72,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         setupToolbar();
         setupSpinners();
         setupDatePicker();
+        setupLocationPermission();
 
         if (expenseId != -1) {
             isEditMode      = true;
@@ -81,6 +100,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         layoutPaymentMethod = findViewById(R.id.layoutPaymentMethod);
         layoutClaimant      = findViewById(R.id.layoutClaimant);
         layoutStatus        = findViewById(R.id.layoutPaymentStatus);
+        layoutLocation      = findViewById(R.id.layoutLocation);
 
         etCode        = findViewById(R.id.etExpenseCode);
         etAmount      = findViewById(R.id.etAmount);
@@ -128,6 +148,84 @@ public class AddEditExpenseActivity extends AppCompatActivity {
             });
             picker.show(getSupportFragmentManager(), "EXPENSE_DATE");
         });
+    }
+
+    private void setupLocationPermission() {
+        locationPermissionRequest = registerForActivityResult(
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> {
+                    Boolean fineLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false);
+                    Boolean coarseLocationGranted = result.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false);
+                    if (fineLocationGranted != null && fineLocationGranted) {
+                        fetchCurrentLocation();
+                    } else if (coarseLocationGranted != null && coarseLocationGranted) {
+                        fetchCurrentLocation();
+                    } else {
+                        Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        layoutLocation.setEndIconOnClickListener(v -> {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                fetchCurrentLocation();
+            } else {
+                locationPermissionRequest.launch(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                });
+            }
+        });
+    }
+
+    private void fetchCurrentLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (locationManager == null) return;
+
+        Toast.makeText(this, "Fetching location...", Toast.LENGTH_SHORT).show();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                locationManager.removeUpdates(this);
+                Geocoder geocoder = new Geocoder(AddEditExpenseActivity.this, Locale.getDefault());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    if (addresses != null && !addresses.isEmpty()) {
+                        String addressLine = addresses.get(0).getAddressLine(0);
+                        etLocation.setText(addressLine);
+                        Toast.makeText(AddEditExpenseActivity.this, "Location found!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        etLocation.setText(location.getLatitude() + ", " + location.getLongitude());
+                    }
+                } catch (IOException e) {
+                    etLocation.setText(location.getLatitude() + ", " + location.getLongitude());
+                }
+            }
+
+            @Override
+            public void onProviderDisabled(@NonNull String provider) {
+                Toast.makeText(AddEditExpenseActivity.this, "Please enable GPS", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        // Try getting last known location first
+        Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (lastKnown == null) {
+            lastKnown = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+
+        if (lastKnown != null) {
+            locationListener.onLocationChanged(lastKnown);
+        } else {
+            // Request fresh location
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+        }
     }
 
     private void populateForm(Expense e) {

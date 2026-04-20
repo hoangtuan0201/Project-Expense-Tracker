@@ -18,6 +18,16 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.io.File;
+import android.net.Uri;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.FileProvider;
+import android.widget.ImageView;
+import com.bumptech.glide.Glide;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 
 /**
  * AddEditProjectActivity — dùng cho cả hai trường hợp:
@@ -35,12 +45,18 @@ public class AddEditProjectActivity extends AppCompatActivity {
     private TextInputEditText etSpecialRequirements, etClientInfo;
     private AutoCompleteTextView spinnerStatus;
     private MaterialButton    btnSaveProject;
+    private MaterialButton    btnTakePhoto;
+    private ImageView         ivProjectPhoto;
 
     // ─── Data ────────────────────────────────────────────────────────────────────
     private DatabaseHelper databaseHelper;
     private Project existingProject; // null nếu đang thêm mới
     private int currentUserId;
     private boolean isEditMode = false;
+    
+    private File currentPhotoFile;
+    private String uploadedImageUrl = null;
+    private ActivityResultLauncher<String> pickImageLauncher;
 
     // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -59,6 +75,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
         setupToolbar();
         setupStatusDropdown();
         setupDatePickers();
+        setupCameraLauncher();
         checkEditMode(); // xác định add hay edit
         setupSaveButton();
     }
@@ -86,6 +103,8 @@ public class AddEditProjectActivity extends AppCompatActivity {
         etClientInfo          = findViewById(R.id.etClientInfo);
         spinnerStatus         = findViewById(R.id.spinnerStatus);
         btnSaveProject        = findViewById(R.id.btnSaveProject);
+        btnTakePhoto          = findViewById(R.id.btnTakePhoto);
+        ivProjectPhoto        = findViewById(R.id.ivProjectPhoto);
     }
 
     private void setupToolbar() {
@@ -108,6 +127,65 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
         // Mở date picker khi click vào End Date field
         etEndDate.setOnClickListener(v -> showDatePicker("Select End Date", etEndDate));
+    }
+
+    private void setupCameraLauncher() {
+        pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    try {
+                        File cacheDir = new File(getCacheDir(), "camera_photos");
+                        if (!cacheDir.exists()) cacheDir.mkdirs();
+                        currentPhotoFile = File.createTempFile("project_photo_", ".jpg", cacheDir);
+                        
+                        InputStream is = getContentResolver().openInputStream(uri);
+                        OutputStream os = new FileOutputStream(currentPhotoFile);
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = is.read(buffer)) > 0) {
+                            os.write(buffer, 0, length);
+                        }
+                        os.flush();
+                        os.close();
+                        is.close();
+                        
+                        processPickedOrCapturedImage();
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Failed to process selected image", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        );
+
+        btnTakePhoto.setOnClickListener(v -> {
+            pickImageLauncher.launch("image/*");
+        });
+    }
+
+    private void processPickedOrCapturedImage() {
+        // Hiển thị ảnh
+        ivProjectPhoto.setVisibility(android.view.View.VISIBLE);
+        Glide.with(this).load(currentPhotoFile).into(ivProjectPhoto);
+        
+        // Bắt đầu upload lên Cloudinary
+        Toast.makeText(this, "Uploading image...", Toast.LENGTH_SHORT).show();
+        btnSaveProject.setEnabled(false); // disable save while uploading
+        
+        CloudinaryHelper.uploadImage(currentPhotoFile, new CloudinaryHelper.UploadCallback() {
+            @Override
+            public void onSuccess(String secureUrl) {
+                uploadedImageUrl = secureUrl;
+                Toast.makeText(AddEditProjectActivity.this, "Image uploaded!", Toast.LENGTH_SHORT).show();
+                btnSaveProject.setEnabled(true);
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(AddEditProjectActivity.this, error, Toast.LENGTH_LONG).show();
+                btnSaveProject.setEnabled(true);
+            }
+        });
     }
 
     /**
@@ -143,6 +221,13 @@ public class AddEditProjectActivity extends AppCompatActivity {
         etBudget.setText(String.valueOf(p.getBudget()));
         etSpecialRequirements.setText(p.getSpecialRequirements());
         etClientInfo.setText(p.getClientInfo());
+        
+        if (p.getPhotoUrl() != null && !p.getPhotoUrl().isEmpty()) {
+            uploadedImageUrl = p.getPhotoUrl();
+            ivProjectPhoto.setVisibility(android.view.View.VISIBLE);
+            Glide.with(this).load(uploadedImageUrl).into(ivProjectPhoto);
+            btnTakePhoto.setText("Retake Photo");
+        }
     }
 
     // ─── Save ────────────────────────────────────────────────────────────────────
@@ -311,6 +396,9 @@ public class AddEditProjectActivity extends AppCompatActivity {
             existingProject.setBudget(budget);
             existingProject.setSpecialRequirements(specReq);
             existingProject.setClientInfo(client);
+            if (uploadedImageUrl != null) {
+                existingProject.setPhotoUrl(uploadedImageUrl);
+            }
             // Đánh dấu chưa sync vì data vừa thay đổi
             existingProject.setIsSynced(0);
 
@@ -330,7 +418,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
                     manager, status, budget,
                     specReq.isEmpty() ? null : specReq,
                     client.isEmpty()  ? null : client,
-                    null, // photoUrl — sẽ thêm ở feature f
+                    uploadedImageUrl, // photoUrl
                     currentUserId
             );
 

@@ -38,6 +38,16 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Optional Project Photo (Hidden if no photo) -->
+            <ImageView
+                android:id="@+id/ivDetailPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginBottom="16dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:contentDescription="Project Photo"/>
+
             <!-- ── Info Card ─────────────────────────────────────────────── -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

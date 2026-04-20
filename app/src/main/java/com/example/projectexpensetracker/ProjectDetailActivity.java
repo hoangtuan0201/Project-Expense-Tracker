@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.widget.ImageView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -147,6 +148,16 @@ public class ProjectDetailActivity extends AppCompatActivity {
             rowClient.setVisibility(View.GONE);
         }
         cardOptional.setVisibility(hasOptional ? View.VISIBLE : View.GONE);
+        
+        ImageView ivDetailPhoto = findViewById(R.id.ivDetailPhoto);
+        if (project.getPhotoUrl() != null && !project.getPhotoUrl().isEmpty()) {
+            ivDetailPhoto.setVisibility(View.VISIBLE);
+            com.bumptech.glide.Glide.with(this)
+                .load(project.getPhotoUrl())
+                .into(ivDetailPhoto);
+        } else {
+            ivDetailPhoto.setVisibility(View.GONE);
+        }
     }
 
     private void applyStatusColor(String status) {
