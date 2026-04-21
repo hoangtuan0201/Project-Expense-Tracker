@@ -1,4 +1,5 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.database;
+import com.example.projectexpensetracker.models.*;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -13,8 +14,11 @@ import java.util.List;
 @Dao
 public interface ProjectDao {
 
-    @Insert
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     long insert(Project project);
+
+    @Query("SELECT * FROM projects WHERE project_code = :projectCode LIMIT 1")
+    Project getByCode(String projectCode);
 
     @Update
     int update(Project project);

@@ -17,19 +17,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjectExpenseTracker">
         <activity
-            android:name=".ProjectDetailActivity"
+            android:name=".activities.ProjectDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".AddEditExpenseActivity"
+            android:name=".activities.AddEditExpenseActivity"
             android:exported="false" />
         <activity
-            android:name=".AddEditProjectActivity"
+            android:name=".activities.AddEditProjectActivity"
             android:exported="false" />
         <activity
-            android:name=".ProjectListActivity"
+            android:name=".activities.ProjectListActivity"
             android:exported="false" />
         <activity
-            android:name=".LauncherActivity"
+            android:name=".activities.LauncherActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,8 +37,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".RegisterActivity" />
+        <activity android:name=".activities.LoginActivity" />
+        <activity android:name=".activities.RegisterActivity" />
     </application>
 
 </manifest>

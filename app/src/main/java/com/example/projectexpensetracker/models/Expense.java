@@ -1,4 +1,4 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.models;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;

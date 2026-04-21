@@ -1,4 +1,8 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.activities;
+import com.example.projectexpensetracker.models.*;
+import com.example.projectexpensetracker.database.*;
+import com.example.projectexpensetracker.adapters.*;
+import com.example.projectexpensetracker.utils.*;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -112,11 +116,11 @@ public class ProjectListActivity extends AppCompatActivity {
 
     private void setupToolbar() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-
-        // Menu inflate từ res/menu/menu_project_list.xml (khai báo app:menu trong XML layout).
-        // action_logout hiện thẳng trên toolbar dưới dạng icon.
-        // action_reset_db nằm trong overflow menu (3 chấm).
         toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_sync) {
+                performCloudSync();
+                return true;
+            }
             if (item.getItemId() == R.id.action_logout) {
                 confirmLogout();
                 return true;
@@ -185,7 +189,7 @@ public class ProjectListActivity extends AppCompatActivity {
         ArrayAdapter<String> statusAdapter = new ArrayAdapter<>(
                 this, android.R.layout.simple_dropdown_item_1line, statusOptions);
         spinnerStatusFilter.setAdapter(statusAdapter);
-        spinnerStatusFilter.setText(statusOptions[0], false); // default selection
+        spinnerStatusFilter.setText(statusOptions[0], false);
 
         btnToggleAdvancedSearch.setOnClickListener(v -> {
             if (layoutAdvancedSearch.getVisibility() == View.GONE) {
@@ -202,14 +206,10 @@ public class ProjectListActivity extends AppCompatActivity {
 
         btnApplyFilters.setOnClickListener(v -> {
             String rawStatus = spinnerStatusFilter.getText().toString().trim();
-            // "All Status" means no filter
             String status  = (rawStatus.equals("All Status") || rawStatus.isEmpty()) ? "" : rawStatus;
-            String manager = etManagerFilter.getText() != null
-                    ? etManagerFilter.getText().toString().trim() : "";
-            String from    = etFromDate.getText() != null
-                    ? etFromDate.getText().toString().trim() : "";
-            String to      = etToDate.getText() != null
-                    ? etToDate.getText().toString().trim() : "";
+            String manager = etManagerFilter.getText() != null ? etManagerFilter.getText().toString().trim() : "";
+            String from    = etFromDate.getText() != null ? etFromDate.getText().toString().trim() : "";
+            String to      = etToDate.getText() != null ? etToDate.getText().toString().trim() : "";
 
             List<Project> results = databaseHelper.advancedSearchProjects(
                     currentUserId,
@@ -222,7 +222,7 @@ public class ProjectListActivity extends AppCompatActivity {
         });
 
         btnResetFilters.setOnClickListener(v -> {
-            spinnerStatusFilter.setText(statusOptions[0], false); // reset to "All Status"
+            spinnerStatusFilter.setText(statusOptions[0], false);
             etManagerFilter.setText("");
             etFromDate.setText("");
             etToDate.setText("");
@@ -271,7 +271,7 @@ public class ProjectListActivity extends AppCompatActivity {
 
     // ─── Actions ─────────────────────────────────────────────────────────────────
 
-    /** Hỏi xác nhận trước khi logout. */
+    /** Confirmation dialog before logging out. */
     private void confirmLogout() {
         new AlertDialog.Builder(this)
                 .setTitle("Logout")
@@ -286,17 +286,62 @@ public class ProjectListActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** Hỏi xác nhận trước khi xoá toàn bộ data. */
+    /** Confirmation dialog before full factory reset. */
     private void confirmResetDatabase() {
         new AlertDialog.Builder(this)
-                .setTitle("Reset Database")
-                .setMessage("This will permanently delete ALL your projects and expenses. This cannot be undone.")
-                .setPositiveButton("Delete All", (dialog, which) -> {
-                    databaseHelper.resetDatabase(currentUserId);
-                    loadProjects();
-                    Toast.makeText(this, "Database reset.", Toast.LENGTH_SHORT).show();
+                .setTitle("Factory Reset")
+                .setMessage("This will permanently delete ALL user accounts, projects, and expenses from this device. You will be logged out. Proceed?")
+                .setPositiveButton("Delete Everything", (dialog, which) -> {
+                    databaseHelper.resetDatabase();
+                    
+                    // Clear session and return to login
+                    getSharedPreferences("user", MODE_PRIVATE)
+                            .edit().clear().apply();
+                    
+                    Toast.makeText(this, "All data wiped successfully.", Toast.LENGTH_LONG).show();
+                    
+                    startActivity(new Intent(this, LoginActivity.class));
+                    finish();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    /** Perform a full data synchronization to Firebase. */
+    private void performCloudSync() {
+        String username = databaseHelper.getUsernameById(currentUserId);
+        FirebaseSyncHelper.syncAllData(this, username, new FirebaseSyncHelper.SyncCallback() {
+            private android.app.ProgressDialog progressDialog;
+
+            @Override
+            public void onSyncStarted() {
+                progressDialog = new android.app.ProgressDialog(ProjectListActivity.this);
+                progressDialog.setTitle("Synchronizing Cloud");
+                progressDialog.setMessage("Please wait while we upload your projects to Firebase...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+            }
+
+            @Override
+            public void onSyncSuccess(String message) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                Toast.makeText(ProjectListActivity.this, message, Toast.LENGTH_LONG).show();
+                loadProjects();
+            }
+
+            @Override
+            public void onSyncFailure(String error) {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                new AlertDialog.Builder(ProjectListActivity.this)
+                        .setTitle("Sync Failed")
+                        .setMessage(error)
+                        .setPositiveButton("OK", null)
+                        .show();
+            }
+        });
     }
 }

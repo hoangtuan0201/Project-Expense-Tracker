@@ -1,4 +1,5 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.database;
+import com.example.projectexpensetracker.models.*;
 
 import android.content.Context;
 import androidx.sqlite.db.SimpleSQLiteQuery;
@@ -16,7 +17,7 @@ public class DatabaseHelper {
         db = AppDatabase.getInstance(context);
     }
 
-    private String hashPassword(String password) {
+    public String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(password.getBytes());
@@ -48,6 +49,24 @@ public class DatabaseHelper {
     public int login(String username, String password) {
         Integer id = db.userDao().login(username, hashPassword(password));
         return id != null ? id : -1;
+    }
+
+    public String getUsernameById(int userId) {
+        return db.userDao().getUsernameById(userId);
+    }
+
+    public int getUserIdByUsername(String username) {
+        Integer id = db.userDao().getUserIdByUsername(username);
+        return id != null ? id : -1;
+    }
+
+    public boolean forceRegisterUser(User user) {
+        try {
+            long result = db.userDao().insert(user);
+            return result != -1;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -118,8 +137,8 @@ public class DatabaseHelper {
         return db.projectDao().delete(projectId);
     }
 
-    public void resetDatabase(int userId) {
-        db.projectDao().deleteAllByUser(userId);
+    public void resetDatabase() {
+        db.clearAllTables();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

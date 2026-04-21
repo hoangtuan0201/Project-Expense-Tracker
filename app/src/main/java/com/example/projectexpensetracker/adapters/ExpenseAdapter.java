@@ -1,4 +1,6 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.adapters;
+import com.example.projectexpensetracker.models.*;
+import com.example.projectexpensetracker.database.*;
 
 import android.content.Context;
 import android.graphics.Color;

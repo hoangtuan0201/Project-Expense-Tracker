@@ -1,4 +1,5 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.database;
+import com.example.projectexpensetracker.models.*;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -11,7 +12,7 @@ import java.util.List;
 @Dao
 public interface ExpenseDao {
 
-    @Insert
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     long insert(Expense expense);
 
     @Update

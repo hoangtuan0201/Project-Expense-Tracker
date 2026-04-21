@@ -1,4 +1,8 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.activities;
+import com.example.projectexpensetracker.models.*;
+import com.example.projectexpensetracker.database.*;
+import com.example.projectexpensetracker.adapters.*;
+import com.example.projectexpensetracker.utils.*;
 
 import android.content.Intent;
 import android.content.SharedPreferences;

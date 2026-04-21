@@ -1,4 +1,5 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.database;
+import com.example.projectexpensetracker.models.*;
 
 import android.content.Context;
 

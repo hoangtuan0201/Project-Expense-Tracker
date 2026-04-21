@@ -1,4 +1,6 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.utils;
+import com.example.projectexpensetracker.models.*;
+import com.example.projectexpensetracker.database.*;
 
 import android.os.Handler;
 import android.os.Looper;

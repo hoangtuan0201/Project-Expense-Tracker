@@ -1,4 +1,8 @@
-package com.example.projectexpensetracker;
+package com.example.projectexpensetracker.activities;
+import com.example.projectexpensetracker.models.*;
+import com.example.projectexpensetracker.database.*;
+import com.example.projectexpensetracker.adapters.*;
+import com.example.projectexpensetracker.utils.*;
 
 import android.os.Bundle;
 import android.widget.Button;
@@ -55,9 +59,22 @@ public class RegisterActivity extends AppCompatActivity {
         boolean isRegistered = databaseHelper.register(username, password);
 
         if (isRegistered) {
-            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
-            // Go to login after successful registration
-            finish();
+            // Sync new account to Cloud
+            User newUser = new User(username, databaseHelper.hashPassword(password));
+            FirebaseSyncHelper.registerOnCloud(newUser, new FirebaseSyncHelper.AuthCallback() {
+                @Override
+                public void onSuccess(String message) {
+                    Toast.makeText(RegisterActivity.this, "Registered and Synced to Cloud!", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    // Allow local success even if cloud sync fails (can sync later)
+                    Toast.makeText(RegisterActivity.this, "Registered locally. Cloud sync failed.", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
         } else {
             Toast.makeText(this, "Registration failed. Username might already exist.", Toast.LENGTH_LONG).show();
         }
