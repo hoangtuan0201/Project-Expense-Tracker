@@ -186,6 +186,9 @@
                 android:layout_height="wrap_content"
                 android:hint="Location (Optional)"
                 android:layout_marginBottom="24dp"
+                app:endIconMode="custom"
+                app:endIconDrawable="@android:drawable/ic_menu_mylocation"
+                app:endIconContentDescription="Get Current Location"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etLocation"
