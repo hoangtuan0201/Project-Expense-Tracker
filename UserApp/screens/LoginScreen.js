@@ -113,12 +113,14 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'Roboto',
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
     marginBottom: 32,
     textAlign: 'center',
+    fontFamily: 'Roboto',
   },
   inputContainer: {
     marginBottom: 16,
@@ -128,6 +130,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
     fontWeight: '600',
+    fontFamily: 'Roboto',
   },
   input: {
     borderWidth: 1,
@@ -136,6 +139,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
     backgroundColor: '#FAFAFA',
+    fontFamily: 'Roboto',
   },
   button: {
     backgroundColor: '#6200EE',
@@ -148,10 +152,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Roboto',
   },
   errorText: {
     color: '#D32F2F',
     marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'Roboto',
   }
 });

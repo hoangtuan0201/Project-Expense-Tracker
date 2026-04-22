@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image, Dimensions, ScrollView } from 'react-native';
 import { database } from '../firebaseConfig';
 import { ref, onValue } from 'firebase/database';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
+
+const TYPE_COLORS = {
+  'Travel': '#4CAF50',
+  'Equipment': '#9C27B0',
+  'Services': '#FF9800',
+  'Materials': '#2196F3',
+  'Software/Licenses': '#E91E63',
+  'Labour costs': '#FFC107',
+  'Utilities': '#00BCD4',
+  'Miscellaneous': '#9E9E9E'
+};
 
 export default function ExpenseListScreen({ route, navigation }) {
   const { project, username } = route.params;
@@ -33,42 +47,117 @@ export default function ExpenseListScreen({ route, navigation }) {
     return () => unsubscribe();
   }, [username, project.firebaseId]);
 
+  // Analytics Calculations
+  const totalSpent = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
+  const budget = parseFloat(project.budget) || 0;
+  const spentPercentage = budget > 0 ? (totalSpent / budget) * 100 : 0;
+  
+  const spendingByType = expenses.reduce((acc, exp) => {
+    const type = exp.type || 'Miscellaneous';
+    acc[type] = (acc[type] || 0) + (parseFloat(exp.amount) || 0);
+    return acc;
+  }, {});
+
   const renderExpenseItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.expenseCard}
       onPress={() => navigation.navigate('ExpenseDetail', { expense: item })}
       activeOpacity={0.7}
     >
-      <View style={styles.expenseHeader}>
-        <Text style={styles.expenseType}>{item.type}</Text>
-        <Text style={styles.expenseAmount}>{item.amount} {item.currency}</Text>
+      <View style={styles.expenseIconContainer}>
+        <View style={[styles.typeIndicator, { backgroundColor: TYPE_COLORS[item.type] || TYPE_COLORS['Miscellaneous'] }]} />
       </View>
-      <Text style={styles.expenseDetails}>{item.expenseCode} • {item.date}</Text>
-      <Text style={styles.expenseDetails}>Paid by: {item.paymentMethod} • Status: {item.paymentStatus}</Text>
-      {item.description ? <Text style={styles.expenseDescription}>{item.description}</Text> : null}
+      <View style={styles.expenseInfo}>
+        <Text style={styles.expenseType}>{item.type}</Text>
+        <Text style={styles.expenseDetails}>{item.date} • {item.paymentMethod}</Text>
+      </View>
+      <View style={styles.expenseAmountContainer}>
+        <Text style={styles.expenseAmount}>-{parseFloat(item.amount).toLocaleString()} {item.currency}</Text>
+        <Text style={styles.paymentStatus}>{item.paymentStatus}</Text>
+      </View>
     </TouchableOpacity>
   );
 
   const renderHeader = () => (
-    <View style={styles.projectHeaderCard}>
-      {project.photoUrl ? (
-        <Image source={{ uri: project.photoUrl }} style={styles.projectImage} resizeMode="cover" />
-      ) : (
-        <View style={styles.placeholderImage}>
-          <Text style={styles.placeholderText}>No Image Available</Text>
+    <View style={styles.headerContainer}>
+      {/* Minimal Project Info */}
+      <View style={styles.minimalHeader}>
+        <View style={styles.projectImageSmallContainer}>
+          {project.photoUrl ? (
+            <Image source={{ uri: project.photoUrl }} style={styles.projectImageSmall} />
+          ) : (
+            <View style={styles.placeholderImageSmall}>
+              <Ionicons name="business" size={24} color="#6200EE" />
+            </View>
+          )}
         </View>
-      )}
-      <View style={styles.projectInfo}>
-        <View style={styles.titleRow}>
-          <Text style={styles.projectCode}>{project.projectCode || 'N/A'}</Text>
-          <Text style={[styles.statusBadge, project.status === 'Completed' ? styles.statusCompleted : styles.statusActive]}>
-            {project.status || 'Active'}
-          </Text>
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.minimalProjectName}>{project.projectName}</Text>
+          <Text style={styles.minimalProjectDetails}>{project.projectCode} • {project.manager}</Text>
         </View>
-        <Text style={styles.projectName}>{project.projectName}</Text>
-        <Text style={styles.projectManager}>Manager: {project.manager}</Text>
-        <Text style={styles.projectDates}>{project.startDate} to {project.endDate}</Text>
+        <View style={[styles.minimalStatus, project.status === 'Completed' ? styles.statusCompleted : styles.statusActive]}>
+           <Text style={styles.statusText}>{project.status || 'Active'}</Text>
+        </View>
       </View>
+
+      {/* Budget Overview Card */}
+      <View style={styles.analyticsCard}>
+        <Text style={styles.analyticsLabel}>Total Expenses</Text>
+        <Text style={styles.totalAmount}>${totalSpent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</Text>
+        
+        <View style={styles.budgetProgressInfo}>
+          <Text style={styles.budgetText}>
+            Budget: <Text style={styles.budgetBold}>${budget.toLocaleString()}</Text>
+          </Text>
+          <Text style={styles.percentageText}>{spentPercentage.toFixed(1)}% used</Text>
+        </View>
+
+        {/* Stacked Spending Bar */}
+        <View style={styles.stackedBarContainer}>
+          {Object.keys(spendingByType).length > 0 ? (
+            Object.keys(spendingByType).map((type, index) => {
+              const widthPerc = (spendingByType[type] / totalSpent) * 100;
+              if (widthPerc < 1) return null; // Skip very small segments
+              return (
+                <View 
+                  key={type} 
+                  style={[
+                    styles.barSegment, 
+                    { 
+                      width: `${widthPerc}%`, 
+                      backgroundColor: TYPE_COLORS[type] || TYPE_COLORS['Miscellaneous'],
+                      borderTopLeftRadius: index === 0 ? 6 : 0,
+                      borderBottomLeftRadius: index === 0 ? 6 : 0,
+                      borderTopRightRadius: index === Object.keys(spendingByType).length - 1 ? 6 : 0,
+                      borderBottomRightRadius: index === Object.keys(spendingByType).length - 1 ? 6 : 0,
+                    }
+                  ]} 
+                />
+              );
+            })
+          ) : (
+            <View style={styles.emptyBar} />
+          )}
+        </View>
+
+        {/* Legend */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.legendScroll}>
+          {Object.keys(spendingByType).map(type => (
+            <View key={type} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: TYPE_COLORS[type] || TYPE_COLORS['Miscellaneous'] }]} />
+              <Text style={styles.legendText}>{type}</Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.remarkText}>
+          {spentPercentage > 90 ? "⚠️ You are close to exceeding the budget!" : 
+           spentPercentage > 50 ? "💡 Spending is at a moderate level." : 
+           "✅ Spending is well within the budget."}
+        </Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>Recent Transactions</Text>
     </View>
   );
 
@@ -85,18 +174,18 @@ export default function ExpenseListScreen({ route, navigation }) {
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
+              <Ionicons name="receipt-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>No expenses logged yet.</Text>
             </View>
           }
         />
       )}
 
-      {/* Floating Action Button */}
       <TouchableOpacity 
         style={styles.fab}
         onPress={() => navigation.navigate('AddExpense', { project, username })}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -105,151 +194,254 @@ export default function ExpenseListScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: '#F8F9FE',
   },
   loader: {
     marginTop: 40,
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 80, // space for FAB
+    paddingBottom: 100,
   },
-  projectHeaderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+  headerContainer: {
+    padding: 20,
   },
-  projectImage: {
-    width: '100%',
-    height: 180,
-  },
-  placeholderImage: {
-    width: '100%',
-    height: 150,
-    backgroundColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: '#888',
-    fontSize: 14,
-  },
-  projectInfo: {
-    padding: 16,
-  },
-  titleRow: {
+  minimalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  projectCode: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#6200EE',
-    backgroundColor: '#F0E6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusBadge: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  statusActive: { backgroundColor: '#E3F2FD', color: '#1976D2' },
-  statusCompleted: { backgroundColor: '#E8F5E9', color: '#388E3C' },
-  projectName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  projectManager: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 4,
-  },
-  projectDates: {
-    fontSize: 13,
-    color: '#888',
-  },
-  expenseCard: {
+    marginBottom: 24,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#6200EE',
+    padding: 12,
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  expenseHeader: {
+  projectImageSmallContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: '#F0E6FF',
+  },
+  projectImageSmall: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImageSmall: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  minimalProjectName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    fontFamily: 'Roboto',
+  },
+  minimalProjectDetails: {
+    fontSize: 13,
+    color: '#777',
+    fontFamily: 'Roboto',
+  },
+  minimalStatus: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    fontFamily: 'Roboto',
+  },
+  statusActive: { backgroundColor: '#E3F2FD', color: '#1976D2' },
+  statusCompleted: { backgroundColor: '#E8F5E9', color: '#388E3C' },
+  
+  analyticsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#6200EE',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 5,
+    marginBottom: 24,
+  },
+  analyticsLabel: {
+    fontSize: 14,
+    color: '#777',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontFamily: 'Roboto',
+  },
+  totalAmount: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    marginVertical: 8,
+    fontFamily: 'Roboto',
+  },
+  budgetProgressInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  budgetText: {
+    fontSize: 14,
+    color: '#555',
+    fontFamily: 'Roboto',
+  },
+  budgetBold: {
+    fontWeight: 'bold',
+    color: '#333',
+    fontFamily: 'Roboto',
+  },
+  percentageText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#6200EE',
+    fontFamily: 'Roboto',
+  },
+  stackedBarContainer: {
+    height: 12,
+    flexDirection: 'row',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  barSegment: {
+    height: '100%',
+  },
+  emptyBar: {
+    flex: 1,
+    backgroundColor: '#F0F0F0',
+  },
+  legendScroll: {
+    marginBottom: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+    fontFamily: 'Roboto',
+  },
+  remarkText: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    fontFamily: 'Roboto',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginBottom: 16,
+    fontFamily: 'Roboto',
+  },
+  expenseCard: {
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  typeIndicator: {
+    width: 4,
+    height: 40,
+    borderRadius: 2,
+  },
+  expenseIconContainer: {
+    marginRight: 12,
+  },
+  expenseInfo: {
+    flex: 1,
   },
   expenseType: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginBottom: 4,
+    fontFamily: 'Roboto',
+  },
+  expenseDetails: {
+    fontSize: 13,
+    color: '#999',
+    fontFamily: 'Roboto',
+  },
+  expenseAmountContainer: {
+    alignItems: 'flex-end',
   },
   expenseAmount: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#D32F2F',
+    color: '#FF5252',
+    marginBottom: 4,
+    fontFamily: 'Roboto',
   },
-  expenseDetails: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 2,
-  },
-  expenseDescription: {
-    fontSize: 14,
-    color: '#444',
-    marginTop: 8,
-    fontStyle: 'italic',
+  paymentStatus: {
+    fontSize: 11,
+    color: '#6200EE',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    fontFamily: 'Roboto',
   },
   emptyContainer: {
-    padding: 30,
+    padding: 40,
     alignItems: 'center',
   },
   emptyText: {
     fontSize: 16,
     color: '#999',
+    marginTop: 12,
+    fontFamily: 'Roboto',
   },
   fab: {
     position: 'absolute',
-    right: 20,
+    right: 24,
     bottom: 24,
     backgroundColor: '#6200EE',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#6200EE',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  fabIcon: {
-    fontSize: 32,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginTop: -2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   }
 });

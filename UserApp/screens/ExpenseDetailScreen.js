@@ -94,6 +94,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
+    fontFamily: 'Roboto',
   },
   statusBadge: {
     fontSize: 12,
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     overflow: 'hidden',
+    fontFamily: 'Roboto',
   },
   statusPaid: { backgroundColor: '#E8F5E9', color: '#388E3C' },
   statusPending: { backgroundColor: '#FFF3E0', color: '#F57C00' },
@@ -111,12 +113,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
+    fontFamily: 'Roboto',
   },
   type: {
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
     marginBottom: 20,
+    fontFamily: 'Roboto',
   },
   divider: {
     height: 1,
@@ -133,6 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#888',
     fontWeight: '500',
+    fontFamily: 'Roboto',
   },
   value: {
     fontSize: 15,
@@ -141,6 +146,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
     marginLeft: 16,
+    fontFamily: 'Roboto',
   },
   descriptionContainer: {
     marginTop: 4,
@@ -151,6 +157,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontStyle: 'italic',
     lineHeight: 22,
+    fontFamily: 'Roboto',
   },
   timestampContainer: {
     marginTop: 8,
@@ -159,5 +166,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#AAA',
     marginBottom: 4,
+    fontFamily: 'Roboto',
   }
 });

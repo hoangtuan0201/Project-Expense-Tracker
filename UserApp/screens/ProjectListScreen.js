@@ -267,6 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 12,
+    fontFamily: 'Roboto',
   },
   favScroll: {
     paddingBottom: 16,
@@ -300,11 +301,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     marginBottom: 2,
+    fontFamily: 'Roboto',
   },
   favCode: {
     color: '#rgba(255,255,255,0.8)',
     fontSize: 11,
     fontWeight: '600',
+    fontFamily: 'Roboto',
   },
   card: {
     backgroundColor: '#fff',
@@ -335,6 +338,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#888',
     fontWeight: '500',
+    fontFamily: 'Roboto',
   },
   heartButton: {
     position: 'absolute',
@@ -364,6 +368,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    fontFamily: 'Roboto',
   },
   statusBadge: {
     fontSize: 12,
@@ -372,6 +377,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     overflow: 'hidden',
+    fontFamily: 'Roboto',
   },
   statusActive: { backgroundColor: '#E3F2FD', color: '#1976D2' },
   statusCompleted: { backgroundColor: '#E8F5E9', color: '#388E3C' },
@@ -382,11 +388,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
+    fontFamily: 'Roboto',
   },
   projectDetails: {
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+    fontFamily: 'Roboto',
   },
   actionContainer: {
     marginTop: 12,
@@ -399,6 +407,7 @@ const styles = StyleSheet.create({
     color: '#6200EE',
     fontWeight: 'bold',
     fontSize: 14,
+    fontFamily: 'Roboto',
   },
   emptyContainer: {
     flex: 1,
@@ -409,5 +418,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999',
+    fontFamily: 'Roboto',
   }
 });

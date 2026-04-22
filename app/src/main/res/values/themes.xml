@@ -34,6 +34,9 @@
         <!-- Error -->
         <item name="colorError">@color/error</item>
 
+        <!-- Font Family -->
+        <item name="android:fontFamily">sans-serif</item>
+
         <!-- Shape — slightly rounded, not too aggressive -->
         <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
         <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>

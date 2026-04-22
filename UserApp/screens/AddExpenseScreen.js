@@ -215,6 +215,7 @@ const styles = StyleSheet.create({
     color: '#6200EE',
     marginBottom: 24,
     textAlign: 'center',
+    fontFamily: 'Roboto',
   },
   row: {
     flexDirection: 'row',
@@ -228,6 +229,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
     fontWeight: '600',
+    fontFamily: 'Roboto',
   },
   input: {
     borderWidth: 1,
@@ -237,10 +239,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FAFAFA',
     justifyContent: 'center',
+    fontFamily: 'Roboto',
   },
   disabledInput: {
     backgroundColor: '#EEEEEE',
     color: '#999',
+    fontFamily: 'Roboto',
   },
   textArea: {
     height: 100,
@@ -264,10 +268,12 @@ const styles = StyleSheet.create({
   },
   pickerText: {
     color: '#666',
+    fontFamily: 'Roboto',
   },
   pickerTextSelected: {
     color: '#6200EE',
     fontWeight: 'bold',
+    fontFamily: 'Roboto',
   },
   button: {
     backgroundColor: '#6200EE',
@@ -280,5 +286,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Roboto',
   },
 });
