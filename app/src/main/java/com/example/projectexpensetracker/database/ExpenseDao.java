@@ -19,12 +19,15 @@ public interface ExpenseDao {
     int update(Expense expense);
 
     @Query("DELETE FROM expenses WHERE id = :expenseId")
-    int delete(int expenseId);
+    int hardDelete(int expenseId);
+
+    @Query("UPDATE expenses SET is_deleted = 1, is_synced = 0 WHERE id = :expenseId")
+    int softDelete(int expenseId);
 
     @Query("DELETE FROM expenses WHERE project_id = :projectId")
-    int deleteAllByProject(int projectId);
+    int hardDeleteAllByProject(int projectId);
 
-    @Query("SELECT * FROM expenses WHERE project_id = :projectId ORDER BY date DESC")
+    @Query("SELECT * FROM expenses WHERE project_id = :projectId AND is_deleted = 0 ORDER BY date DESC")
     List<Expense> getByProject(int projectId);
 
     @Query("SELECT * FROM expenses WHERE id = :expenseId LIMIT 1")
@@ -33,11 +36,14 @@ public interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE expense_code = :expenseCode LIMIT 1")
     Expense getByCode(String expenseCode);
 
-    @Query("SELECT SUM(amount) FROM expenses WHERE project_id = :projectId")
+    @Query("SELECT SUM(amount) FROM expenses WHERE project_id = :projectId AND is_deleted = 0")
     Double getTotalExpenseByProject(int projectId);
 
     @Query("SELECT * FROM expenses WHERE project_id = :projectId AND is_synced = 0")
     List<Expense> getUnsyncedExpenses(int projectId);
+
+    @Query("SELECT * FROM expenses WHERE is_deleted = 1")
+    List<Expense> getAllDeletedExpenses();
 
     @Query("UPDATE expenses SET is_synced = 1, updated_at = :updatedAt WHERE id = :expenseId")
     void markAsSynced(int expenseId, String updatedAt);

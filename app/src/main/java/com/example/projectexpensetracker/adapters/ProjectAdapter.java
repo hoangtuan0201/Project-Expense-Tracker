@@ -111,9 +111,14 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             // Date range: "01 Jan - 31 Dec"
             tvDateRange.setText(project.getStartDate() + " → " + project.getEndDate());
 
+            // Tính toán tổng chi tiêu để kiểm tra ngân sách
+            DatabaseHelper dbHelper = new DatabaseHelper(context);
+            double totalExpenses = dbHelper.getTotalExpenseByProject(project.getId());
+            boolean isOverBudget = totalExpenses > project.getBudget();
+
             // Status badge — màu khác nhau cho từng trạng thái
             tvStatus.setText(project.getStatus());
-            applyStatusBadgeColor(project.getStatus());
+            applyStatusBadgeColor(project.getStatus(), isOverBudget);
 
             // Sync indicator — icon tint + label
             if (project.isSyncedToCloud()) {
@@ -132,27 +137,34 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             itemView.setOnClickListener(v -> listener.onProjectClick(project));
         }
 
-        /** Đổi màu status badge + accent bar bên trái theo trạng thái. */
-        private void applyStatusBadgeColor(String status) {
+        /** Đổi màu status badge + accent bar bên trái theo trạng thái và ngân sách. */
+        private void applyStatusBadgeColor(String status, boolean isOverBudget) {
             int bgColor, textColor, accentColor;
 
-            switch (status) {
-                case "Active":
-                    bgColor     = Color.parseColor("#DCFCE7");
-                    textColor   = Color.parseColor("#166534");
-                    accentColor = Color.parseColor("#22C55E");
-                    break;
-                case "Completed":
-                    bgColor     = Color.parseColor("#DBEAFE");
-                    textColor   = Color.parseColor("#1E40AF");
-                    accentColor = Color.parseColor("#6366F1");
-                    break;
-                case "On Hold":
-                default:
-                    bgColor     = Color.parseColor("#FEF9C3");
-                    textColor   = Color.parseColor("#854D0E");
-                    accentColor = Color.parseColor("#F59E0B");
-                    break;
+            if (isOverBudget) {
+                // Red theme for Overbudget (Priority)
+                bgColor     = Color.parseColor("#FEE2E2");
+                textColor   = Color.parseColor("#991B1B");
+                accentColor = Color.parseColor("#EF4444");
+            } else {
+                switch (status) {
+                    case "Active":
+                        bgColor     = Color.parseColor("#DCFCE7");
+                        textColor   = Color.parseColor("#166534");
+                        accentColor = Color.parseColor("#22C55E");
+                        break;
+                    case "Completed":
+                        bgColor     = Color.parseColor("#DBEAFE");
+                        textColor   = Color.parseColor("#1E40AF");
+                        accentColor = Color.parseColor("#6366F1");
+                        break;
+                    case "On Hold":
+                    default:
+                        bgColor     = Color.parseColor("#F3F4F6"); // Light Grey
+                        textColor   = Color.parseColor("#374151"); // Dark Grey
+                        accentColor = Color.parseColor("#9E9E9E"); // Medium Grey
+                        break;
+                }
             }
 
             // Status pill badge

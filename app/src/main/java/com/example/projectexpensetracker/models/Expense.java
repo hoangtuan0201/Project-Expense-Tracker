@@ -117,6 +117,9 @@ public class Expense {
     @ColumnInfo(name = "is_synced", defaultValue = "0")
     private int isSynced;           // 0 = not synced, 1 = synced
 
+    @ColumnInfo(name = "is_deleted", defaultValue = "0")
+    private int isDeleted;          // 0 = active, 1 = deleted (tombstone)
+
     @ColumnInfo(name = "created_at", defaultValue = "CURRENT_TIMESTAMP")
     private String createdAt;
 
@@ -211,6 +214,9 @@ public class Expense {
 
     public int getIsSynced() { return isSynced; }
     public void setIsSynced(int isSynced) { this.isSynced = isSynced; }
+
+    public int getIsDeleted() { return isDeleted; }
+    public void setIsDeleted(int isDeleted) { this.isDeleted = isDeleted; }
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }

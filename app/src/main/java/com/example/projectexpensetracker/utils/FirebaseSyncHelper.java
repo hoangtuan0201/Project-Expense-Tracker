@@ -145,7 +145,12 @@ public class FirebaseSyncHelper {
                         for (DataSnapshot expSnap : expSnapRoot.getChildren()) {
                             Expense e = expSnap.getValue(Expense.class);
                             if (e != null && localProjId != -1) {
-                                if (dbHelper.getExpenseByCode(e.getExpenseCode()) == null) {
+                                Expense existing = dbHelper.getExpenseByCode(e.getExpenseCode());
+                                if (existing != null && existing.getIsDeleted() == 1) {
+                                    // Bỏ qua nếu đã xóa ở local (không kéo về lại)
+                                    continue;
+                                }
+                                if (existing == null) {
                                     e.setProjectId(localProjId);
                                     e.setIsSynced(1);
                                     dbHelper.addExpense(e);
@@ -183,7 +188,10 @@ public class FirebaseSyncHelper {
             List<Expense> expenses = dbHelper.getExpensesByProject(project.getId());
             Map<String, Object> expensesMap = new HashMap<>();
             for (Expense expense : expenses) {
-                expensesMap.put(expense.getExpenseCode(), convertExpenseToMap(expense));
+                // Chỉ đẩy những expense chưa bị xóa
+                if (expense.getIsDeleted() == 0) {
+                    expensesMap.put(expense.getExpenseCode(), convertExpenseToMap(expense));
+                }
             }
             projectMap.put("expenses", expensesMap);
             backupData.put(project.getProjectCode(), projectMap);
@@ -194,9 +202,22 @@ public class FirebaseSyncHelper {
                 for (Project p : projects) {
                     dbHelper.markProjectSynced(p.getId());
                 }
+                // Cleanup: Xóa vĩnh viễn các mục đã đánh dấu xóa sau khi sync thành công
+                cleanupDeletedItems(dbHelper);
                 callback.onSyncSuccess("Data synchronized to Cloud successfully!");
             })
             .addOnFailureListener(e -> callback.onSyncFailure("Sync failed: " + e.getMessage()));
+    }
+
+    private static void cleanupDeletedItems(DatabaseHelper dbHelper) {
+        List<Expense> deletedExpenses = dbHelper.getAllDeletedExpenses();
+        for (Expense e : deletedExpenses) {
+            dbHelper.hardDeleteExpense(e.getId());
+        }
+        List<Project> deletedProjects = dbHelper.getAllDeletedProjects();
+        for (Project p : deletedProjects) {
+            dbHelper.hardDeleteProject(p.getId());
+        }
     }
 
     /**
@@ -215,18 +236,26 @@ public class FirebaseSyncHelper {
                 for (DataSnapshot projSnap : snapshot.getChildren()) {
                     Project p = projSnap.getValue(Project.class);
                     if (p != null) {
-                        p.setUserId(localUserId);
-                        p.setIsSynced(1); // Dữ liệu từ cloud mặc định là đã sync
-                        long projId = dbHelper.addProject(p);
+                        Project existingProj = dbHelper.getProjectByCode(p.getProjectCode());
+                        int projId;
+                        if (existingProj != null) {
+                            projId = existingProj.getId();
+                        } else {
+                            p.setUserId(localUserId);
+                            p.setIsSynced(1); 
+                            projId = (int) dbHelper.addProject(p);
+                        }
                         
-                        // Khôi phục Expenses
+                        // Khôi phục Expenses (Deduplicate by Code)
                         DataSnapshot expSnapRoot = projSnap.child("expenses");
                         for (DataSnapshot expSnap : expSnapRoot.getChildren()) {
                             Expense e = expSnap.getValue(Expense.class);
-                            if (e != null) {
-                                e.setProjectId((int) projId);
-                                e.setIsSynced(1);
-                                dbHelper.addExpense(e);
+                            if (e != null && projId != -1) {
+                                if (dbHelper.getExpenseByCode(e.getExpenseCode()) == null) {
+                                    e.setProjectId(projId);
+                                    e.setIsSynced(1);
+                                    dbHelper.addExpense(e);
+                                }
                             }
                         }
                     }

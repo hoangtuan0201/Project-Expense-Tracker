@@ -24,22 +24,25 @@ public interface ProjectDao {
     int update(Project project);
 
     @Query("DELETE FROM projects WHERE id = :projectId")
-    int delete(int projectId);
+    int hardDelete(int projectId);
 
-    @Query("DELETE FROM projects WHERE user_id = :userId")
-    void deleteAllByUser(int userId);
+    @Query("UPDATE projects SET is_deleted = 1, is_synced = 0 WHERE id = :projectId")
+    int softDelete(int projectId);
 
-    @Query("SELECT * FROM projects WHERE user_id = :userId ORDER BY created_at DESC")
+    @Query("SELECT * FROM projects WHERE user_id = :userId AND is_deleted = 0 ORDER BY created_at DESC")
     List<Project> getAllByUser(int userId);
 
     @Query("SELECT * FROM projects WHERE id = :projectId LIMIT 1")
     Project getById(int projectId);
 
-    @Query("SELECT * FROM projects WHERE user_id = :userId AND (project_name LIKE :keyword OR description LIKE :keyword OR project_code LIKE :keyword) ORDER BY project_name ASC")
+    @Query("SELECT * FROM projects WHERE user_id = :userId AND is_deleted = 0 AND (project_name LIKE :keyword OR description LIKE :keyword OR project_code LIKE :keyword) ORDER BY project_name ASC")
     List<Project> searchProjects(int userId, String keyword);
 
     @Query("SELECT * FROM projects WHERE user_id = :userId AND is_synced = 0")
     List<Project> getUnsyncedProjects(int userId);
+
+    @Query("SELECT * FROM projects WHERE is_deleted = 1")
+    List<Project> getAllDeletedProjects();
 
     @Query("UPDATE projects SET is_synced = 1, updated_at = :updatedAt WHERE id = :projectId")
     void markAsSynced(int projectId, String updatedAt);

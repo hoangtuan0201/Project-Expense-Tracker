@@ -51,6 +51,7 @@ export default function ExpenseListScreen({ route, navigation }) {
   const totalSpent = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
   const budget = parseFloat(project.budget) || 0;
   const spentPercentage = budget > 0 ? (totalSpent / budget) * 100 : 0;
+  const isOverBudget = totalSpent > budget;
   
   const spendingByType = expenses.reduce((acc, exp) => {
     const type = exp.type || 'Miscellaneous';
@@ -95,7 +96,10 @@ export default function ExpenseListScreen({ route, navigation }) {
           <Text style={styles.minimalProjectName}>{project.projectName}</Text>
           <Text style={styles.minimalProjectDetails}>{project.projectCode} • {project.manager}</Text>
         </View>
-        <View style={[styles.minimalStatus, project.status === 'Completed' ? styles.statusCompleted : styles.statusActive]}>
+        <View style={[
+          styles.minimalStatus, 
+          project.status === 'Completed' ? styles.statusCompleted : styles.statusActive
+        ]}>
            <Text style={styles.statusText}>{project.status || 'Active'}</Text>
         </View>
       </View>
@@ -109,7 +113,7 @@ export default function ExpenseListScreen({ route, navigation }) {
           <Text style={styles.budgetText}>
             Budget: <Text style={styles.budgetBold}>${budget.toLocaleString()}</Text>
           </Text>
-          <Text style={styles.percentageText}>{spentPercentage.toFixed(1)}% used</Text>
+          <Text style={[styles.percentageText, isOverBudget && { color: '#FF5252' }]}>{spentPercentage.toFixed(1)}% used</Text>
         </View>
 
         {/* Stacked Spending Bar */}
@@ -151,7 +155,8 @@ export default function ExpenseListScreen({ route, navigation }) {
         </ScrollView>
 
         <Text style={styles.remarkText}>
-          {spentPercentage > 90 ? "⚠️ You are close to exceeding the budget!" : 
+          {isOverBudget ? "🚨 ALERT: You have exceeded the budget!" :
+           spentPercentage > 90 ? "⚠️ You are close to exceeding the budget!" : 
            spentPercentage > 50 ? "💡 Spending is at a moderate level." : 
            "✅ Spending is well within the budget."}
         </Text>
@@ -260,8 +265,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Roboto',
   },
-  statusActive: { backgroundColor: '#E3F2FD', color: '#1976D2' },
-  statusCompleted: { backgroundColor: '#E8F5E9', color: '#388E3C' },
+  statusActive: { backgroundColor: '#DCFCE7', color: '#166534' },
+  statusCompleted: { backgroundColor: '#DBEAFE', color: '#1E40AF' },
+  statusOnHold: { backgroundColor: '#F3F4F6', color: '#374151' },
   
   analyticsCard: {
     backgroundColor: '#fff',

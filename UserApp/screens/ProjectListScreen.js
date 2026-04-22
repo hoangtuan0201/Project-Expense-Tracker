@@ -151,7 +151,6 @@ export default function ProjectListScreen({ route, navigation }) {
       </View>
     );
   };
-
   const renderProjectItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
@@ -379,9 +378,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     fontFamily: 'Roboto',
   },
-  statusActive: { backgroundColor: '#E3F2FD', color: '#1976D2' },
-  statusCompleted: { backgroundColor: '#E8F5E9', color: '#388E3C' },
-  statusOnHold: { backgroundColor: '#FFF3E0', color: '#F57C00' },
+  statusActive: { backgroundColor: '#DCFCE7', color: '#166534' },
+  statusCompleted: { backgroundColor: '#DBEAFE', color: '#1E40AF' },
+  statusOnHold: { backgroundColor: '#F3F4F6', color: '#374151' },
   
   projectName: {
     fontSize: 20,
