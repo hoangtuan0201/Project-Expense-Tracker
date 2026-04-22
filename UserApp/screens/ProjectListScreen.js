@@ -1,25 +1,63 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator, Image, ScrollView, Alert } from 'react-native';
 import { database } from '../firebaseConfig';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, set } from 'firebase/database';
+import { Ionicons } from '@expo/vector-icons';
+import { CommonActions } from '@react-navigation/native';
 
 export default function ProjectListScreen({ route, navigation }) {
   const { username } = route.params;
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
+  const [favorites, setFavorites] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity 
+          style={{ marginRight: 16 }} 
+          onPress={() => {
+            Alert.alert(
+              "Logout",
+              "Are you sure you want to log out?",
+              [
+                { text: "Cancel", style: "cancel" },
+                { 
+                  text: "Logout", 
+                  style: "destructive",
+                  onPress: () => {
+                    navigation.dispatch(
+                      CommonActions.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' }],
+                      })
+                    );
+                  }
+                }
+              ]
+            );
+          }}
+        >
+          <Ionicons name="log-out-outline" size={24} color="#FF5252" />
+        </TouchableOpacity>
+      ),
+      headerLeft: () => null, // Hide back button if any
+    });
+  }, [navigation]);
+
   useEffect(() => {
     const projectsRef = ref(database, `users/${username}/projects`);
+    const favRef = ref(database, `users/${username}/favorites`);
     
-    // Listen for real-time updates
-    const unsubscribe = onValue(projectsRef, (snapshot) => {
+    // Listen for real-time updates on projects
+    const unsubscribeProjects = onValue(projectsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         // Convert object to array
         const loadedProjects = Object.keys(data).map(key => ({
-          firebaseId: key, // Keep track of the node key to add expenses later
+          firebaseId: key,
           ...data[key]
         }));
         // Sort by start date or id
@@ -36,7 +74,19 @@ export default function ProjectListScreen({ route, navigation }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for real-time updates on favorites
+    const unsubscribeFavs = onValue(favRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setFavorites(snapshot.val());
+      } else {
+        setFavorites({});
+      }
+    });
+
+    return () => {
+      unsubscribeProjects();
+      unsubscribeFavs();
+    };
   }, [username]);
 
   useEffect(() => {
@@ -53,27 +103,102 @@ export default function ProjectListScreen({ route, navigation }) {
     }
   }, [searchQuery, projects]);
 
+  const toggleFavorite = (firebaseId) => {
+    const isFav = !!favorites[firebaseId];
+    const newFavs = { ...favorites };
+    if (isFav) {
+      delete newFavs[firebaseId];
+    } else {
+      newFavs[firebaseId] = true;
+    }
+    const favRef = ref(database, `users/${username}/favorites`);
+    set(favRef, newFavs);
+  };
+
+  const favoriteProjects = projects.filter(p => favorites[p.firebaseId]);
+
+  const renderFavoriteItem = (item) => (
+    <TouchableOpacity 
+      key={item.firebaseId}
+      style={styles.favCard}
+      onPress={() => navigation.navigate('ExpenseList', { project: item, username })}
+      activeOpacity={0.8}
+    >
+      <Image 
+        source={{ uri: item.photoUrl || 'https://via.placeholder.com/150' }} 
+        style={styles.favImage} 
+        resizeMode="cover" 
+      />
+      <View style={styles.favOverlay}>
+        <Text style={styles.favTitle} numberOfLines={1}>{item.projectName}</Text>
+        <Text style={styles.favCode}>{item.projectCode}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderHeader = () => {
+    if (favoriteProjects.length === 0) return null;
+    return (
+      <View style={styles.favSection}>
+        <Text style={styles.sectionTitle}>🌟 Quick Access</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.favScroll}
+        >
+          {favoriteProjects.map(renderFavoriteItem)}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderProjectItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.card}
-      onPress={() => navigation.navigate('AddExpense', { project: item, username })}
+      onPress={() => navigation.navigate('ExpenseList', { project: item, username })}
+      activeOpacity={0.8}
     >
-      <View style={styles.cardHeader}>
-        <Text style={styles.projectCode}>{item.projectCode || 'N/A'}</Text>
-        <Text style={[
-          styles.statusBadge, 
-          item.status === 'Completed' ? styles.statusCompleted : 
-          item.status === 'On Hold' ? styles.statusOnHold : styles.statusActive
-        ]}>
-          {item.status || 'Active'}
-        </Text>
+      <View style={styles.imageContainer}>
+        {item.photoUrl ? (
+          <Image source={{ uri: item.photoUrl }} style={styles.cardImage} resizeMode="cover" />
+        ) : (
+          <View style={styles.cardImagePlaceholder}>
+            <Text style={styles.placeholderText}>No Image</Text>
+          </View>
+        )}
+        <TouchableOpacity 
+          style={styles.heartButton}
+          onPress={(e) => {
+            e.stopPropagation(); // Prevent opening the project
+            toggleFavorite(item.firebaseId);
+          }}
+        >
+          <Ionicons 
+            name={favorites[item.firebaseId] ? "heart" : "heart-outline"} 
+            size={22} 
+            color={favorites[item.firebaseId] ? "#FF5252" : "#FFFFFF"} 
+          />
+        </TouchableOpacity>
       </View>
-      <Text style={styles.projectName}>{item.projectName || 'Unnamed Project'}</Text>
-      <Text style={styles.projectDetails}>Manager: {item.manager || 'N/A'}</Text>
-      <Text style={styles.projectDetails}>Date: {item.startDate || 'N/A'} to {item.endDate || 'N/A'}</Text>
       
-      <View style={styles.actionContainer}>
-        <Text style={styles.actionText}>+ ADD EXPENSE</Text>
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.projectCode}>{item.projectCode || 'N/A'}</Text>
+          <Text style={[
+            styles.statusBadge, 
+            item.status === 'Completed' ? styles.statusCompleted : 
+            item.status === 'On Hold' ? styles.statusOnHold : styles.statusActive
+          ]}>
+            {item.status || 'Active'}
+          </Text>
+        </View>
+        <Text style={styles.projectName}>{item.projectName || 'Unnamed Project'}</Text>
+        <Text style={styles.projectDetails}>Manager: {item.manager || 'N/A'}</Text>
+        <Text style={styles.projectDetails}>Date: {item.startDate || 'N/A'} to {item.endDate || 'N/A'}</Text>
+        
+        <View style={styles.actionContainer}>
+          <Text style={styles.actionText}>VIEW EXPENSES &rarr;</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -83,7 +208,7 @@ export default function ProjectListScreen({ route, navigation }) {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by project name or date (YYYY-MM-DD)"
+          placeholder="Search by project name or date..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -95,6 +220,7 @@ export default function ProjectListScreen({ route, navigation }) {
         <FlatList
           data={filteredProjects}
           keyExtractor={(item) => item.firebaseId || item.id?.toString() || Math.random().toString()}
+          ListHeaderComponent={renderHeader}
           renderItem={renderProjectItem}
           contentContainerStyle={styles.listContent}
         />
@@ -120,6 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    zIndex: 10,
   },
   searchInput: {
     backgroundColor: '#F0F0F0',
@@ -129,17 +256,99 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingTop: 0,
+  },
+  favSection: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  favScroll: {
+    paddingBottom: 16,
+  },
+  favCard: {
+    width: 140,
+    height: 100,
+    borderRadius: 12,
+    marginRight: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    backgroundColor: '#fff',
+  },
+  favImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+  favOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+    padding: 10,
+  },
+  favTitle: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  favCode: {
+    color: '#rgba(255,255,255,0.8)',
+    fontSize: 11,
+    fontWeight: '600',
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
     marginBottom: 16,
+    marginTop: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  cardImage: {
+    width: '100%',
+    height: 140,
+  },
+  cardImagePlaceholder: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#888',
+    fontWeight: '500',
+  },
+  heartButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardContent: {
+    padding: 16,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -154,7 +363,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0E6FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   statusBadge: {
     fontSize: 12,
@@ -169,7 +378,7 @@ const styles = StyleSheet.create({
   statusOnHold: { backgroundColor: '#FFF3E0', color: '#F57C00' },
   
   projectName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 8,
@@ -195,6 +404,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 40,
   },
   emptyText: {
     fontSize: 16,

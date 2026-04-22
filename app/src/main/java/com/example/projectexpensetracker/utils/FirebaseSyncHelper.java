@@ -122,6 +122,59 @@ public class FirebaseSyncHelper {
         }
 
         FirebaseDatabase database = FirebaseDatabase.getInstance(FirebaseConfig.DATABASE_URL);
+        DatabaseReference projectsRef = database.getReference(FirebaseConfig.getUserNode(username)).child("projects");
+
+        projectsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // 1. Kéo Expenses mới nhất từ Firebase về SQLite trước
+                for (DataSnapshot projSnap : snapshot.getChildren()) {
+                    Project p = projSnap.getValue(Project.class);
+                    if (p != null) {
+                        Project localProj = dbHelper.getProjectByCode(p.getProjectCode());
+                        int localProjId = -1;
+                        if (localProj != null) {
+                            localProjId = localProj.getId();
+                        } else {
+                            p.setUserId(userId);
+                            p.setIsSynced(1);
+                            localProjId = (int) dbHelper.addProject(p);
+                        }
+
+                        DataSnapshot expSnapRoot = projSnap.child("expenses");
+                        for (DataSnapshot expSnap : expSnapRoot.getChildren()) {
+                            Expense e = expSnap.getValue(Expense.class);
+                            if (e != null && localProjId != -1) {
+                                if (dbHelper.getExpenseByCode(e.getExpenseCode()) == null) {
+                                    e.setProjectId(localProjId);
+                                    e.setIsSynced(1);
+                                    dbHelper.addExpense(e);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. Đẩy ngược toàn bộ dữ liệu SQLite đã cập nhật lên lại Firebase
+                pushLocalDataToFirebase(context, username, userId, dbHelper, callback);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onSyncFailure("Pull from Firebase failed: " + error.getMessage());
+            }
+        });
+    }
+
+    private static void pushLocalDataToFirebase(Context context, String username, int userId, DatabaseHelper dbHelper, SyncCallback callback) {
+        List<Project> projects = dbHelper.getAllProjectsByUser(userId);
+
+        if (projects.isEmpty()) {
+            callback.onSyncSuccess("No data to upload.");
+            return;
+        }
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance(FirebaseConfig.DATABASE_URL);
         DatabaseReference userRef = database.getReference(FirebaseConfig.getUserNode(username));
 
         Map<String, Object> backupData = new HashMap<>();

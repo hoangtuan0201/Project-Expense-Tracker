@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const EXPENSE_TYPES = ['Travel', 'Equipment', 'Materials', 'Services', 'Software/Licenses', 'Labour costs', 'Utilities', 'Miscellaneous'];
 const PAYMENT_METHODS = ['Cash', 'Credit Card', 'Bank Transfer', 'Cheque'];
+const PAYMENT_STATUSES = ['Pending', 'Paid', 'Reimbursed'];
 
 export default function AddExpenseScreen({ route, navigation }) {
   const { project, username } = route.params;
@@ -18,6 +19,7 @@ export default function AddExpenseScreen({ route, navigation }) {
   const [currency, setCurrency] = useState('USD');
   const [type, setType] = useState(EXPENSE_TYPES[0]);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
+  const [paymentStatus, setPaymentStatus] = useState(PAYMENT_STATUSES[0]);
   const [claimant, setClaimant] = useState(username);
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -56,12 +58,9 @@ export default function AddExpenseScreen({ route, navigation }) {
         type,
         paymentMethod,
         claimant,
-        paymentStatus: 'Pending', // Default
+        paymentStatus,
         description,
-        location,
-        isSynced: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        location
       };
 
       await set(newExpenseRef, expenseData);
@@ -146,6 +145,11 @@ export default function AddExpenseScreen({ route, navigation }) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Payment Method</Text>
             {renderPicker(PAYMENT_METHODS, paymentMethod, setPaymentMethod)}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Payment Status</Text>
+            {renderPicker(PAYMENT_STATUSES, paymentStatus, setPaymentStatus)}
           </View>
 
           <View style={styles.inputGroup}>

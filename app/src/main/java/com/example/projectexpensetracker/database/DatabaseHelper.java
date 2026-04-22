@@ -89,6 +89,10 @@ public class DatabaseHelper {
         return db.projectDao().getById(projectId);
     }
 
+    public Project getProjectByCode(String projectCode) {
+        return db.projectDao().getByCode(projectCode);
+    }
+
     public List<Project> searchProjects(String keyword, int userId) {
         return db.projectDao().searchProjects(userId, "%" + keyword + "%");
     }
@@ -159,6 +163,10 @@ public class DatabaseHelper {
 
     public Expense getExpenseById(int expenseId) {
         return db.expenseDao().getById(expenseId);
+    }
+
+    public Expense getExpenseByCode(String expenseCode) {
+        return db.expenseDao().getByCode(expenseCode);
     }
 
     public double getTotalExpenseByProject(int projectId) {

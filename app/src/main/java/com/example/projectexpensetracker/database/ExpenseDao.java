@@ -30,6 +30,9 @@ public interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE id = :expenseId LIMIT 1")
     Expense getById(int expenseId);
 
+    @Query("SELECT * FROM expenses WHERE expense_code = :expenseCode LIMIT 1")
+    Expense getByCode(String expenseCode);
+
     @Query("SELECT SUM(amount) FROM expenses WHERE project_id = :projectId")
     Double getTotalExpenseByProject(int projectId);
 
