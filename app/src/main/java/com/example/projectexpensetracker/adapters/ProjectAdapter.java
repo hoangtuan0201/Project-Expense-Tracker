@@ -1,4 +1,6 @@
 package com.example.projectexpensetracker.adapters;
+
+import com.example.projectexpensetracker.R;
 import com.example.projectexpensetracker.models.*;
 import com.example.projectexpensetracker.database.*;
 
