@@ -19,17 +19,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 /**
- * ProjectAdapter — hiển thị danh sách Project trong RecyclerView.
+ * ProjectAdapter — displays a list of Projects in a RecyclerView.
  *
- * Cách dùng:
+ * Usage:
  *   ProjectAdapter adapter = new ProjectAdapter(context, projectList, project -> {
- *       // xử lý khi user click vào 1 project
+ *       // Handle when a user clicks on a project
  *   });
  *   recyclerView.setAdapter(adapter);
  */
 public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectViewHolder> {
 
-    // Interface callback — trả về project được click lên Activity/Fragment
+    // Interface callback — returns the clicked project to the Activity/Fragment
     public interface OnProjectClickListener {
         void onProjectClick(Project project);
     }
@@ -68,7 +68,7 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
 
     // ─── Public helpers ──────────────────────────────────────────────────────────
 
-    /** Cập nhật toàn bộ danh sách (dùng khi search hoặc reload). */
+    /** Updates the entire list (used during search or reload). */
     public void updateList(List<Project> newList) {
         this.projectList = newList;
         notifyDataSetChanged();
@@ -102,7 +102,7 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
         }
 
         void bind(Project project) {
-            // Thông tin cơ bản
+            // Basic information
             tvProjectName.setText(project.getProjectName());
             tvProjectCode.setText(project.getProjectCode());
             tvManager.setText(project.getManager());
@@ -111,12 +111,12 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
             // Date range: "01 Jan - 31 Dec"
             tvDateRange.setText(project.getStartDate() + " → " + project.getEndDate());
 
-            // Tính toán tổng chi tiêu để kiểm tra ngân sách
+            // Calculate total spending to check the budget
             DatabaseHelper dbHelper = new DatabaseHelper(context);
             double totalExpenses = dbHelper.getTotalExpenseByProject(project.getId());
             boolean isOverBudget = totalExpenses > project.getBudget();
 
-            // Status badge — màu khác nhau cho từng trạng thái
+            // Status badge — different colors for each status
             tvStatus.setText(project.getStatus());
             applyStatusBadgeColor(project.getStatus(), isOverBudget);
 
@@ -133,11 +133,11 @@ public class ProjectAdapter extends RecyclerView.Adapter<ProjectAdapter.ProjectV
                 tvSyncStatus.setTextColor(Color.parseColor("#9E9E9E"));
             }
 
-            // Click listener — toàn bộ card
+            // Click listener — entire card
             itemView.setOnClickListener(v -> listener.onProjectClick(project));
         }
 
-        /** Đổi màu status badge + accent bar bên trái theo trạng thái và ngân sách. */
+        /** Changes the status badge and left accent bar colors based on status and budget. */
         private void applyStatusBadgeColor(String status, boolean isOverBudget) {
             int bgColor, textColor, accentColor;
 

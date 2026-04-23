@@ -78,7 +78,7 @@ public class Project {
     @Ignore
     public Project() {}
 
-    /** Constructor dùng khi tạo project mới (chưa có id, createdAt, updatedAt) */
+    /** Constructor used when creating a new project (without id, createdAt, updatedAt) */
     @Ignore
     public Project(String projectCode, String projectName, String description,
                    String startDate, String endDate, String manager,
@@ -100,7 +100,7 @@ public class Project {
         this.isSynced             = 0;
     }
 
-    /** Constructor đầy đủ — dùng khi đọc từ database (Room sủ dụng cái này) */
+    /** Full constructor — used when reading from the database (used by Room) */
     public Project(int id, String projectCode, String projectName, String description,
                    String startDate, String endDate, String manager,
                    String status, double budget,
@@ -182,7 +182,7 @@ public class Project {
 
     // ─── Helper ──────────────────────────────────────────────────────────────────
 
-    /** Trả về true nếu project đã được sync lên cloud */
+    /** Returns true if the project has been synced to the cloud */
     public boolean isSyncedToCloud() { return isSynced == 1; }
 
     @Override

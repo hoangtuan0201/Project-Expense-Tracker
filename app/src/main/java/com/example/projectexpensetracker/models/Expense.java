@@ -22,7 +22,7 @@ import androidx.room.PrimaryKey;
 )
 public class Expense {
 
-    // ─── Constants — giá trị hợp lệ cho các enum field ───────────────────────────
+    // ─── Constants — valid values for enum fields ───────────────────────────────
 
     @Ignore
     public static final String TYPE_TRAVEL            = "Travel";
@@ -57,20 +57,20 @@ public class Expense {
     @Ignore
     public static final String STATUS_REIMBURSED      = "Reimbursed";
 
-    /** Danh sách hiển thị trong Spinner cho Type */
+    /** List shown in the Spinner for Type */
     @Ignore
     public static final String[] EXPENSE_TYPES = {
             TYPE_TRAVEL, TYPE_EQUIPMENT, TYPE_MATERIALS, TYPE_SERVICES,
             TYPE_SOFTWARE, TYPE_LABOUR, TYPE_UTILITIES, TYPE_MISCELLANEOUS
     };
 
-    /** Danh sách hiển thị trong Spinner cho Payment Method */
+    /** List shown in the Spinner for Payment Method */
     @Ignore
     public static final String[] PAYMENT_METHODS = {
             PAYMENT_CASH, PAYMENT_CREDIT_CARD, PAYMENT_BANK_TRANSFER, PAYMENT_CHEQUE
     };
 
-    /** Danh sách hiển thị trong Spinner cho Payment Status */
+    /** List shown in the Spinner for Payment Status */
     @Ignore
     public static final String[] PAYMENT_STATUSES = {
             STATUS_PAID, STATUS_PENDING, STATUS_REIMBURSED
@@ -131,7 +131,7 @@ public class Expense {
     @Ignore
     public Expense() {}
 
-    /** Constructor dùng khi tạo expense mới (chưa có id, createdAt, updatedAt) */
+    /** Constructor used when creating a new expense (without id, createdAt, updatedAt) */
     @Ignore
     public Expense(String expenseCode, int projectId, String date,
                    double amount, String currency, String type,
@@ -151,7 +151,7 @@ public class Expense {
         this.isSynced      = 0;
     }
 
-    /** Constructor đầy đủ — dùng khi đọc từ database */
+    /** Full constructor — used when reading from the database */
     public Expense(int id, String expenseCode, int projectId, String date,
                    double amount, String currency, String type,
                    String paymentMethod, String claimant, String paymentStatus,
@@ -226,10 +226,10 @@ public class Expense {
 
     // ─── Helper ──────────────────────────────────────────────────────────────────
 
-    /** Trả về true nếu expense đã được sync lên cloud */
+    /** Returns true if the expense has been synced to the cloud */
     public boolean isSyncedToCloud() { return isSynced == 1; }
 
-    /** Format amount kèm currency để hiển thị, ví dụ: "1,500.00 USD" */
+    /** Format amount with currency for display, e.g., "1,500.00 USD" */
     public String getFormattedAmount() {
         return String.format("%,.2f %s", amount, currency);
     }

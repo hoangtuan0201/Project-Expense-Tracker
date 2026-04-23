@@ -44,9 +44,9 @@ import java.io.IOException;
 
 /**
  * AddEditExpenseActivity — Req (c)
- * Dùng cho add mới và edit expense.
- * Truyền vào: "project_id"  (bắt buộc khi add)
- *             "expense_id"  (khi edit — nếu có sẽ vào edit mode)
+ * Used for both adding new and editing existing expenses.
+ * Input parameters: "project_id"  (required when adding)
+ *                   "expense_id"  (when editing — if present, will enter edit mode)
  */
 public class AddEditExpenseActivity extends AppCompatActivity {
 

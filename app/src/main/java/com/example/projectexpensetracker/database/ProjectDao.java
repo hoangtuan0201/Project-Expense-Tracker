@@ -47,7 +47,7 @@ public interface ProjectDao {
     @Query("UPDATE projects SET is_synced = 1, updated_at = :updatedAt WHERE id = :projectId")
     void markAsSynced(int projectId, String updatedAt);
 
-    // Dùng RawQuery để hỗ trợ tìm kiếm nâng cao với các tiêu chí tùy chọn
+    // Use RawQuery to support advanced searching with optional criteria
     @RawQuery
     List<Project> advancedSearch(SupportSQLiteQuery query);
 }

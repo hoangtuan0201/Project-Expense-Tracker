@@ -27,8 +27,8 @@ import java.util.List;
 
 /**
  * ProjectDetailActivity — Req (b) + (c)
- * - Hiển thị đầy đủ thông tin project (View, Edit, Delete)
- * - Liệt kê và quản lý Expenses của project (Add, Edit)
+ * - Displays complete project information (View, Edit, Delete)
+ * - List and manage project expenses (Add, Edit)
  */
 public class ProjectDetailActivity extends AppCompatActivity {
 
@@ -118,7 +118,7 @@ public class ProjectDetailActivity extends AppCompatActivity {
 
     // ─── Data Loading ─────────────────────────────────────────────────────────────
 
-    /** Req (b): Load và hiển thị đầy đủ thông tin project. */
+    /** Req (b): Load and display complete project information. */
     private void loadProjectData() {
         project = databaseHelper.getProjectById(projectId);
         if (project == null) { finish(); return; }
@@ -185,7 +185,7 @@ public class ProjectDetailActivity extends AppCompatActivity {
         tvDetailStatus.setText(status);
     }
 
-    /** Req (c): Setup RecyclerView hiển thị danh sách expense. */
+    /** Req (c): Set up RecyclerView to display the expense list. */
     private void setupExpenseList() {
         recyclerExpenses.setLayoutManager(new LinearLayoutManager(this));
         refreshExpenseList();

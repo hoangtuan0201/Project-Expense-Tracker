@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * FirebaseSyncHelper — Logic đồng bộ hóa dữ liệu và quản lý tài khoản trên Cloud.
+ * FirebaseSyncHelper — Data synchronization logic and account management on the Cloud.
  */
 public class FirebaseSyncHelper {
 
@@ -36,7 +36,7 @@ public class FirebaseSyncHelper {
     }
 
     /**
-     * Đăng ký tài khoản lên Cloud để có thể đồng bộ xuyên thiết bị.
+     * Register account on the Cloud for cross-device synchronization.
      */
     public static void registerOnCloud(User user, AuthCallback callback) {
         FirebaseDatabase database = FirebaseDatabase.getInstance(FirebaseConfig.DATABASE_URL);
@@ -50,7 +50,7 @@ public class FirebaseSyncHelper {
                 } else {
                     Map<String, String> accountInfo = new HashMap<>();
                     accountInfo.put("username", user.getUsername());
-                    accountInfo.put("password", user.getPassword()); // Đã được hash từ DatabaseHelper
+                    accountInfo.put("password", user.getPassword()); // Already hashed from DatabaseHelper
                     
                     accountRef.setValue(accountInfo)
                         .addOnSuccessListener(aVoid -> callback.onSuccess("Account synced to Cloud."))
@@ -66,7 +66,7 @@ public class FirebaseSyncHelper {
     }
 
     /**
-     * Đăng nhập từ Cloud nếu tài khoản chưa có ở máy cục bộ.
+     * Login from the Cloud if the account is not available on the local device.
      */
     public static void loginFromCloud(String username, String password, AuthCallback callback) {
         FirebaseDatabase database = FirebaseDatabase.getInstance(FirebaseConfig.DATABASE_URL);
@@ -77,7 +77,7 @@ public class FirebaseSyncHelper {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     String cloudPassword = snapshot.child("password").getValue(String.class);
-                    // DatabaseHelper.hashPassword(input) nên khớp với cloudPassword
+                    // DatabaseHelper.hashPassword(input) should match cloudPassword
                     if (cloudPassword != null && cloudPassword.equals(password)) {
                         callback.onSuccess("Cloud login successful.");
                     } else {
@@ -96,7 +96,7 @@ public class FirebaseSyncHelper {
     }
 
     /**
-     * Đồng bộ toàn bộ dữ liệu (Upload) dựa trên username.
+     * Synchronize all data (Upload) based on username.
      */
     public static void syncAllData(Context context, String username, SyncCallback callback) {
         if (!NetworkUtils.isNetworkAvailable(context)) {
@@ -127,7 +127,7 @@ public class FirebaseSyncHelper {
         projectsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // 1. Kéo Expenses mới nhất từ Firebase về SQLite trước
+                // 1. Pull the latest Expenses from Firebase to SQLite first
                 for (DataSnapshot projSnap : snapshot.getChildren()) {
                     Project p = projSnap.getValue(Project.class);
                     if (p != null) {
@@ -147,7 +147,7 @@ public class FirebaseSyncHelper {
                             if (e != null && localProjId != -1) {
                                 Expense existing = dbHelper.getExpenseByCode(e.getExpenseCode());
                                 if (existing != null && existing.getIsDeleted() == 1) {
-                                    // Bỏ qua nếu đã xóa ở local (không kéo về lại)
+                                    // Skip if deleted locally (do not pull back)
                                     continue;
                                 }
                                 if (existing == null) {
@@ -160,7 +160,7 @@ public class FirebaseSyncHelper {
                     }
                 }
 
-                // 2. Đẩy ngược toàn bộ dữ liệu SQLite đã cập nhật lên lại Firebase
+                // 2. Push all updated SQLite data back to Firebase
                 pushLocalDataToFirebase(context, username, userId, dbHelper, callback);
             }
 
@@ -188,7 +188,7 @@ public class FirebaseSyncHelper {
             List<Expense> expenses = dbHelper.getExpensesByProject(project.getId());
             Map<String, Object> expensesMap = new HashMap<>();
             for (Expense expense : expenses) {
-                // Chỉ đẩy những expense chưa bị xóa
+                // Only push expenses that have not been deleted
                 if (expense.getIsDeleted() == 0) {
                     expensesMap.put(expense.getExpenseCode(), convertExpenseToMap(expense));
                 }
@@ -202,7 +202,7 @@ public class FirebaseSyncHelper {
                 for (Project p : projects) {
                     dbHelper.markProjectSynced(p.getId());
                 }
-                // Cleanup: Xóa vĩnh viễn các mục đã đánh dấu xóa sau khi sync thành công
+                // Cleanup: Permanently delete items marked for deletion after successful sync
                 cleanupDeletedItems(dbHelper);
                 callback.onSyncSuccess("Data synchronized to Cloud successfully!");
             })
@@ -221,7 +221,7 @@ public class FirebaseSyncHelper {
     }
 
     /**
-     * Tải toàn bộ dữ liệu từ Cloud về máy (Restore).
+     * Download all data from the Cloud to the device (Restore).
      */
     public static void syncDownData(Context context, String username, int localUserId, SyncCallback callback) {
         callback.onSyncStarted();
@@ -246,7 +246,7 @@ public class FirebaseSyncHelper {
                             projId = (int) dbHelper.addProject(p);
                         }
                         
-                        // Khôi phục Expenses (Deduplicate by Code)
+                        // Restore Expenses (Deduplicate by Code)
                         DataSnapshot expSnapRoot = projSnap.child("expenses");
                         for (DataSnapshot expSnap : expSnapRoot.getChildren()) {
                             Expense e = expSnap.getValue(Expense.class);

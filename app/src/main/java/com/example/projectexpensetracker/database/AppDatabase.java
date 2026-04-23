@@ -22,8 +22,8 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "ProjectExpenseTracker.db")
-                            // Bật allowMainThreadQueries() để giữ độ tương thích với code cũ
-                            // không cần cấu trúc lại toàn bộ ứng dụng sang async / rx.
+                            // Enable allowMainThreadQueries() to maintain compatibility with legacy code
+                            // without needing to refactor the entire application to async/rx.
                             .allowMainThreadQueries()
                             .fallbackToDestructiveMigration()
                             .build();
