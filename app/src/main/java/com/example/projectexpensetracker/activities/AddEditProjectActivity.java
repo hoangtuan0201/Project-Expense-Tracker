@@ -210,6 +210,10 @@ public class AddEditProjectActivity extends AppCompatActivity {
                 MaterialToolbar toolbar = findViewById(R.id.toolbar);
                 toolbar.setTitle("Edit Project");
                 btnSaveProject.setText("Update Project");
+
+                // Disable editing of Project Code in Edit mode to prevent sync issues
+                etProjectCode.setEnabled(false);
+                layoutProjectCode.setHelperText("Project ID cannot be changed once created");
             }
         }
     }

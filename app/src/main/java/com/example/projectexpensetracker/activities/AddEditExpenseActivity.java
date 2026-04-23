@@ -88,6 +88,10 @@ public class AddEditExpenseActivity extends AppCompatActivity {
                 populateForm(existingExpense);
                 ((MaterialToolbar) findViewById(R.id.toolbar)).setTitle("Edit Expense");
                 btnSave.setText("Update Expense");
+
+                // Disable editing of Expense Code in Edit mode to prevent sync issues
+                etCode.setEnabled(false);
+                layoutCode.setHelperText("Expense ID cannot be changed once created");
             }
         }
 
@@ -212,24 +216,20 @@ public class AddEditExpenseActivity extends AppCompatActivity {
                     etLocation.setText(location.getLatitude() + ", " + location.getLongitude());
                 }
             }
-
-            @Override
-            public void onProviderDisabled(@NonNull String provider) {
-                Toast.makeText(AddEditExpenseActivity.this, "Please enable GPS", Toast.LENGTH_SHORT).show();
-            }
         };
 
-        // Try getting last known location first
-        Location lastKnown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (lastKnown == null) {
-            lastKnown = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+        if (!isGpsEnabled && !isNetworkEnabled) {
+            Toast.makeText(this, "Please enable Location services in settings", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        if (lastKnown != null) {
-            locationListener.onLocationChanged(lastKnown);
-        } else {
-            // Request fresh location
+        if (isGpsEnabled) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+        }
+        if (isNetworkEnabled) {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
         }
     }
