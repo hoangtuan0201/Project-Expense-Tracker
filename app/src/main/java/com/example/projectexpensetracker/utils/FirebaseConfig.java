@@ -3,21 +3,21 @@ import com.example.projectexpensetracker.models.*;
 import com.example.projectexpensetracker.database.*;
 
 /**
- * FirebaseConfig — Lớp cấu hình tập trung cho Firebase.
- * Bạn nên dán URL Database của mình vào đây.
+ * FirebaseConfig — Centralized configuration class for Firebase.
+ * You should paste your Database URL here.
  */
 public class FirebaseConfig {
 
-    // Đây là "Environment Variable" của bạn. 
-    // Hãy thay thế bằng URL Realtime Database của bạn từ Firebase Console.
+    // This is your "Environment Variable". 
+    // Please replace this with your Realtime Database URL from the Firebase Console.
     public static final String DATABASE_URL = "https://expenseprojecttracker-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
-    // Logic này giúp xác định node lưu trữ dữ liệu của user
+    // This logic helps determine the data storage node for the user.
     public static String getUserNode(String username) {
         return "users/" + username.replace(".", "_");
     }
 
-    // Logic xác định node lưu trữ thông tin đăng nhập
+    // Logic for determining the account storage node.
     public static String getAccountNode(String username) {
         return "accounts/" + username.replace(".", "_");
     }

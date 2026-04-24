@@ -9,12 +9,12 @@ import android.net.NetworkInfo;
 import android.os.Build;
 
 /**
- * NetworkUtils — Kiểm tra trạng thái kết nối internet.
+ * NetworkUtils — Check internet connection status.
  */
 public class NetworkUtils {
 
     /**
-     * Trả về true nếu thiết bị đang có kết nối Internet (Wifi hoặc Mobile Data).
+     * Returns true if the device has an Internet connection (Wifi or Mobile Data).
      */
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -28,7 +28,7 @@ public class NetworkUtils {
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
             );
         } else {
-            // Hỗ trợ cho các phiên bản Android cũ hơn
+            // Support for older Android versions
             NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
             return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }

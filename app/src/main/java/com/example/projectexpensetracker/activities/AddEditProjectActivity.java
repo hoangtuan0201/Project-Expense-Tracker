@@ -36,9 +36,9 @@ import java.io.OutputStream;
 import java.io.FileOutputStream;
 
 /**
- * AddEditProjectActivity — dùng cho cả hai trường hợp:
- *   1. Thêm project mới  → gọi từ ProjectListActivity (không truyền project_id)
- *   2. Sửa project cũ   → gọi từ ProjectDetailActivity (truyền project_id)
+ * AddEditProjectActivity — used for both cases:
+ *   1. Adding a new project  → called from ProjectListActivity (without project_id)
+ *   2. Editing an existing project → called from ProjectDetailActivity (with project_id)
  */
 public class AddEditProjectActivity extends AppCompatActivity {
 
@@ -56,7 +56,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
     // ─── Data ────────────────────────────────────────────────────────────────────
     private DatabaseHelper databaseHelper;
-    private Project existingProject; // null nếu đang thêm mới
+    private Project existingProject; // null if adding new
     private int currentUserId;
     private boolean isEditMode = false;
     
@@ -73,7 +73,6 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
         databaseHelper = new DatabaseHelper(this);
 
-        // Lấy userId từ SharedPreferences
         SharedPreferences prefs = getSharedPreferences("user", MODE_PRIVATE);
         currentUserId = prefs.getInt("user_id", -1);
 
@@ -82,7 +81,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
         setupStatusDropdown();
         setupDatePickers();
         setupCameraLauncher();
-        checkEditMode(); // xác định add hay edit
+        checkEditMode(); // determine if add or edit
         setupSaveButton();
     }
 
@@ -115,7 +114,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
     private void setupToolbar() {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        // Nút back trên toolbar
+        // Back button on toolbar
         toolbar.setNavigationOnClickListener(v -> finish());
     }
 
@@ -128,10 +127,10 @@ public class AddEditProjectActivity extends AppCompatActivity {
     }
 
     private void setupDatePickers() {
-        // Mở date picker khi click vào Start Date field
+        // Open date picker when clicking on the Start Date field
         etStartDate.setOnClickListener(v -> showDatePicker("Select Start Date", etStartDate));
 
-        // Mở date picker khi click vào End Date field
+        // Open date picker when clicking on the End Date field
         etEndDate.setOnClickListener(v -> showDatePicker("Select End Date", etEndDate));
     }
 
@@ -170,11 +169,11 @@ public class AddEditProjectActivity extends AppCompatActivity {
     }
 
     private void processPickedOrCapturedImage() {
-        // Hiển thị ảnh
+        // Display the image
         ivProjectPhoto.setVisibility(android.view.View.VISIBLE);
         Glide.with(this).load(currentPhotoFile).into(ivProjectPhoto);
         
-        // Bắt đầu upload lên Cloudinary
+        // Start uploading to Cloudinary
         Toast.makeText(this, "Uploading image...", Toast.LENGTH_SHORT).show();
         btnSaveProject.setEnabled(false); // disable save while uploading
         
@@ -195,8 +194,8 @@ public class AddEditProjectActivity extends AppCompatActivity {
     }
 
     /**
-     * Kiểm tra Intent có truyền project_id không.
-     * Nếu có → edit mode: load data lên form.
+     * Check if project_id is passed in the Intent.
+     * If yes, enter edit mode and load data into the form.
      */
     private void checkEditMode() {
         int projectId = getIntent().getIntExtra("project_id", -1);
@@ -207,15 +206,19 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
             if (existingProject != null) {
                 populateForm(existingProject);
-                // Đổi title toolbar
+                // Change toolbar title
                 MaterialToolbar toolbar = findViewById(R.id.toolbar);
                 toolbar.setTitle("Edit Project");
                 btnSaveProject.setText("Update Project");
+
+                // Disable editing of Project Code in Edit mode to prevent sync issues
+                etProjectCode.setEnabled(false);
+                layoutProjectCode.setHelperText("Project ID cannot be changed once created");
             }
         }
     }
 
-    /** Điền dữ liệu project vào form (chế độ edit). */
+    /** Populate the form with project data (edit mode). */
     private void populateForm(Project p) {
         etProjectCode.setText(p.getProjectCode());
         etProjectName.setText(p.getProjectName());
@@ -247,8 +250,8 @@ public class AddEditProjectActivity extends AppCompatActivity {
     }
 
     /**
-     * Req (a): Hiển thị lại toàn bộ thông tin đã nhập để user xác nhận trước khi lưu.
-     * User có thể bấm "Edit" để quay lại sửa, hoặc "Confirm" để lưu.
+     * Req (a): Display all entered information for user confirmation before saving.
+     * User can click "Edit" to modify or "Confirm" to save.
      */
     private void showConfirmationDialog() {
         String code    = getFieldText(etProjectCode);
@@ -280,14 +283,14 @@ public class AddEditProjectActivity extends AppCompatActivity {
     }
 
     /**
-     * Validate tất cả required fields.
-     * Nếu field nào trống → set error message trên TextInputLayout và trả về false.
-     * Nếu tất cả hợp lệ → xoá hết lỗi và trả về true.
+     * Validate all required fields.
+     * If any field is empty, set an error message on the TextInputLayout and return false.
+     * If all fields are valid, clear all errors and return true.
      */
     private boolean validateForm() {
         boolean isValid = true;
 
-        // Xoá lỗi cũ
+        // Clear old errors
         clearErrors();
 
         // Project Code
@@ -325,7 +328,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
             isValid = false;
         }
 
-        // End date phải sau start date
+        // End date must be after start date
         if (!startDate.isEmpty() && !endDate.isEmpty() && endDate.compareTo(startDate) < 0) {
             layoutEndDate.setError("End date must be after start date");
             isValid = false;
@@ -377,7 +380,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
         layoutBudget.setError(null);
     }
 
-    /** Lưu hoặc cập nhật project sau khi validate thành công. */
+    /** Save or update the project after successful validation. */
     private void saveProject() {
         String code     = getFieldText(etProjectCode);
         String name     = getFieldText(etProjectName);
@@ -405,7 +408,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
             if (uploadedImageUrl != null) {
                 existingProject.setPhotoUrl(uploadedImageUrl);
             }
-            // Đánh dấu chưa sync vì data vừa thay đổi
+            // Mark as unsynced because data has just changed
             existingProject.setIsSynced(0);
 
             int rows = databaseHelper.updateProject(existingProject);
@@ -434,7 +437,7 @@ public class AddEditProjectActivity extends AppCompatActivity {
                 setResult(RESULT_OK);
                 finish();
             } else {
-                // Lỗi phổ biến nhất: trùng project code
+                // Common error: duplicate project code
                 Toast.makeText(this,
                         "Failed to save. Project code may already exist.",
                         Toast.LENGTH_LONG).show();
@@ -444,13 +447,13 @@ public class AddEditProjectActivity extends AppCompatActivity {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-    /** Lấy text từ EditText, loại bỏ khoảng trắng thừa. Trả về "" nếu null. */
+    /** Retrieve text from EditText, trim whitespace. Return "" if null. */
     private String getFieldText(TextInputEditText field) {
         if (field.getText() == null) return "";
         return field.getText().toString().trim();
     }
 
-    /** Hiển thị Material Date Picker và ghi kết quả vào target EditText. */
+    /** Show Material Date Picker and set the result to the target EditText. */
     private void showDatePicker(String title, TextInputEditText target) {
         MaterialDatePicker<Long> picker = MaterialDatePicker.Builder
                 .datePicker()

@@ -138,7 +138,15 @@ public class DatabaseHelper {
     }
 
     public int deleteProject(int projectId) {
-        return db.projectDao().delete(projectId);
+        return db.projectDao().softDelete(projectId);
+    }
+
+    public List<Project> getAllDeletedProjects() {
+        return db.projectDao().getAllDeletedProjects();
+    }
+
+    public int hardDeleteProject(int projectId) {
+        return db.projectDao().hardDelete(projectId);
     }
 
     public void resetDatabase() {
@@ -188,11 +196,19 @@ public class DatabaseHelper {
     }
 
     public int deleteExpense(int expenseId) {
-        return db.expenseDao().delete(expenseId);
+        return db.expenseDao().softDelete(expenseId);
+    }
+
+    public List<Expense> getAllDeletedExpenses() {
+        return db.expenseDao().getAllDeletedExpenses();
+    }
+
+    public int hardDeleteExpense(int expenseId) {
+        return db.expenseDao().hardDelete(expenseId);
     }
 
     public int deleteAllExpensesByProject(int projectId) {
-        return db.expenseDao().deleteAllByProject(projectId);
+        return db.expenseDao().hardDeleteAllByProject(projectId);
     }
 
     private String getCurrentDateTime() {
